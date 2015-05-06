@@ -19,4 +19,5 @@ HEADERS  +=
 FORMS    += \
     manageTransaction.ui \
     mainWindow.ui \
-    manageAccounts.ui
+    manageAccounts.ui \
+    transactionsRoll.ui

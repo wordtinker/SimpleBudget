@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
+from PyQt5.QtCore import QModelIndex, Qt
 
-from baseTreeModel import TreeModel, TreeItem
+from models import TreeModel, TreeItem
 from ui.mainWindow import Ui_MainWindow
 
 import os
@@ -11,6 +12,7 @@ import config
 from enums import ACCOUNT_TYPES, Account
 from storage import Storage
 from accountsManager import AccountsManager
+from transactionsRoll import TransactionsRoll
 
 # Define working directory for app
 if "APPDATA" in os.environ:  # We are on Windows
@@ -39,7 +41,7 @@ class AccountsTree(TreeModel):
 
     def _update_accounts(self):
         accounts = [Account(*a) for a in self.storage.select_accounts_summary()]
-        account_dict = dict((i, []) for i in ACCOUNT_TYPES)
+        account_dict = dict((i, []) for i in ACCOUNT_TYPES)  # FIXME order
 
         for acc in accounts:
             account_dict[acc.type].append(acc)
@@ -82,6 +84,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.actionCloseFile.triggered.connect(self.close_file)
         self.actionQuit.triggered.connect(self.exit_action_triggered)
         self.actionManageAccounts.triggered.connect(self.manage_accounts)
+
+        self.accountsTree.doubleClicked.connect(self.account_clicked)
 
         # Try to open the most recent file
         self.load_recent_file()
@@ -139,7 +143,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def manage_accounts(self):
         """
-        Fires up the widget to manage languages
+        Fires up the widget to manage accounts
         """
         if self.storage and self.accounts:
 
@@ -163,6 +167,22 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.accountsTree.hideColumn(5)
         self.accountsTree.hideColumn(6)
         self.accountsTree.expandAll()
+
+    def account_clicked(self, index: QModelIndex):
+        acc = index.data(role=Qt.UserRole)
+        if type(acc) != Account:
+            return
+
+        transaction_manager = TransactionsRoll(self.storage, acc.id)
+
+        self.menuBar.setEnabled(False)
+
+        transaction_manager.exec()
+
+        self.menuBar.setEnabled(True)
+
+        # Update if there was changes
+        self.show_accounts()
 
 if __name__ == '__main__':
     # Ensure consistency of data dir

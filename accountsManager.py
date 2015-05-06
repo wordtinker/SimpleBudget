@@ -1,63 +1,9 @@
 from PyQt5.QtWidgets import QDialog, QInputDialog, QMessageBox
-from PyQt5.QtCore import QItemSelectionModel, QAbstractListModel, QVariant, Qt,\
-    QModelIndex
+from PyQt5.QtCore import QItemSelectionModel, Qt, QModelIndex
 
 import ui.manageAccounts
-
-from enums import ACCOUNT_TYPES, Account
-
-
-class AccountsListModel(QAbstractListModel):
-    def __init__(self):
-        super().__init__()
-        self.items = []
-
-    # Basic methods
-
-    def rowCount(self, parent=None, *args, **kwargs):
-        return len(self.items)
-
-    def data(self, index, role=None):
-        if not index.isValid():
-            return QVariant()
-
-        # User role for returnin full informations about account
-        if role == Qt.UserRole:
-            return QVariant(self.items[index.row()])
-
-        if role != Qt.DisplayRole:
-            return QVariant()
-
-        acc = self.items[index.row()]
-        return QVariant(acc.name)
-
-    # Editable model methods
-
-    def setData(self, index, value, role=None):
-        if index.isValid():
-            self.items[index.row()] = Account(*value)
-            self.dataChanged.emit(index, index)
-            return True
-        return False
-
-    def insertRows(self, position, rows, parent=QModelIndex(), *args, **kwargs):
-        self.beginInsertRows(parent, position, position + rows - 1)
-        for i in range(rows):
-            self.items.insert(position, None)
-        self.endInsertRows()
-        return True
-
-    def removeRows(self, position, rows, parent=QModelIndex(), *args, **kwargs):
-        self.beginRemoveRows(parent, position, position + rows - 1)
-        for i in range(rows):
-            self.items.pop(position)
-        self.endRemoveRows()
-        return True
-
-    def addItem(self, item):
-        row = 0
-        self.insertRows(row, 1)
-        self.setData(self.index(row), item)
+from models import AccountsListModel
+from enums import ACCOUNT_TYPES
 
 
 class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
