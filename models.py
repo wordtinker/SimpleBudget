@@ -1,8 +1,6 @@
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt,\
     QAbstractListModel, QVariant, QAbstractTableModel
 
-from enums import Account
-
 
 class TreeItem:
     def __init__(self, data, parent=None):
@@ -114,7 +112,7 @@ class TreeModel(QAbstractItemModel):
         return Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
 
-class AccountsListModel(QAbstractListModel):
+class ListModel(QAbstractListModel):
     def __init__(self):
         super().__init__()
         self.items = []
@@ -128,21 +126,21 @@ class AccountsListModel(QAbstractListModel):
         if not index.isValid():
             return QVariant()
 
-        # User role for returning full information about account
+        # User role for returning whole Item
         if role == Qt.UserRole:
             return QVariant(self.items[index.row()])
 
         if role != Qt.DisplayRole:
             return QVariant()
 
-        acc = self.items[index.row()]
-        return QVariant(acc.name)
+        item = self.items[index.row()]
+        return QVariant(item[0])
 
     # Editable model methods
 
     def setData(self, index, value, role=None):
         if index.isValid():
-            self.items[index.row()] = Account(*value)
+            self.items[index.row()] = value
             self.dataChanged.emit(index, index)
             return True
         return False
@@ -227,7 +225,7 @@ class TableModel(QAbstractTableModel):
     def prepare(self):
         self.removeRows(0, self.rowCount())
 
-    def add_row(self, item):
+    def addRow(self, item):
         self.insertRows(0, 1)
         self.items[0] = item
         self.dataChanged.emit(self.index(0, 0), self.index(0, 0))

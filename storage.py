@@ -26,8 +26,22 @@ class Storage:
         amount INTEGER,
         info TEXT,
         acc_id INTEGER,
-        cat_id INTEGER)""")
+        category_id INTEGER)""")
         self.db_conn.commit()
+
+        self.db_cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Categories(
+        name TEXT UNIQUE)""")
+        self.db_conn.commit()
+
+        self.db_cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Subcategories(
+        name TEXT,
+        parent TEXT,
+        UNIQUE(name, parent))""")
+        self.db_conn.commit()
+
+    # #################### Accounts ########################
 
     def select_accounts_summary(self):
         db_cursor = self.db_conn.cursor()
@@ -99,32 +113,40 @@ class Storage:
         """, (acc_id, ))
         self.db_conn.commit()
 
-    #################### Transactions #######################
+    # ################### Transactions #####################
 
     def select_transactions(self, acc_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
-        SELECT *, rowid
+        SELECT date, amount, info, category_id, rowid
         FROM Transactions
         WHERE acc_id = ?
         ORDER BY date ASC""", (acc_id,))
         return db_cursor.fetchall()
 
-    def add_transaction(self, date, amount, info, acc_id, cat_id):
+    def select_transactions_for_category(self, category_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT *, rowid
+        FROM Transactions
+        WHERE category_id = ?""", (category_id,))
+        return db_cursor.fetchall()
+
+    def add_transaction(self, date, amount, info, acc_id, category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         INSERT INTO Transactions
         VALUES(?, ?, ?, ?, ?)
-        """, (date, amount, info, acc_id, cat_id))
+        """, (date, amount, info, acc_id, category_id))
         self.db_conn.commit()
         rowid = db_cursor.lastrowid
-        return date.isoformat(), amount, info, acc_id, cat_id, rowid
+        return date.isoformat(), amount, info, category_id, rowid
 
     def update_transaction(self, trans_id, date, amount, info, category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         UPDATE Transactions
-        SET date=?, amount=?, info=?, cat_id=?
+        SET date=?, amount=?, info=?, category_id=?
         WHERE rowid=?
         """, (date, amount, info, category_id, trans_id))
         self.db_conn.commit()
@@ -136,3 +158,82 @@ class Storage:
         WHERE rowid=?
         """, (trans_id, ))
         self.db_conn.commit()
+
+    # #################### Categories #####################
+
+    def select_parents(self):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT name, NULL, rowid
+        FROM Categories
+        ORDER BY name ASC""", ())
+        return db_cursor.fetchall()
+
+    def select_subcategories(self, category):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT name, parent, rowid
+        FROM Subcategories
+        WHERE parent=?""", (category, ))
+        return db_cursor.fetchall()
+
+    def select_all_subcategories(self):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT name, parent, rowid
+        FROM Subcategories""", ())
+        return db_cursor.fetchall()
+
+    def add_category(self, name):
+        db_cursor = self.db_conn.cursor()
+        try:
+            db_cursor.execute("""
+            INSERT INTO Categories
+            VALUES(?)
+            """, (name,))
+            self.db_conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False
+
+    def add_subcategory(self, name, parent):
+        db_cursor = self.db_conn.cursor()
+        try:
+            db_cursor.execute("""
+            INSERT INTO Subcategories
+            VALUES(?, ?)
+            """, (name, parent))
+            self.db_conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False
+
+    def delete_category(self, category):
+        # Can't delete if there is a child category
+        children = self.select_subcategories(category)
+        if len(children) > 0:
+            return False
+
+        # Delete the category
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        DELETE FROM Categories
+        WHERE name=?
+        """, (category, ))
+        self.db_conn.commit()
+        return True
+
+    def delete_subcategory(self, category_id):
+        # Can't delete if there is a transaction
+        transactions = self.select_transactions_for_category(category_id)
+        if len(transactions) > 0:
+            return False
+
+        # Delete the subcategory
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        DELETE FROM Subcategories
+        WHERE rowid=?
+        """, (category_id, ))
+        self.db_conn.commit()
+        return True

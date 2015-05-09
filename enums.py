@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 ACCOUNT_TYPES = ('Bank', 'Cash', 'Credit Card')
 
 
@@ -21,14 +23,6 @@ class Account(Item):
         self.exbudget = exbudget
         self.extotal = extotal
 
+Transaction = namedtuple('Transaction', ['date', 'amount', 'info', 'category', 'category_id', 'id'])
 
-class Transaction(Item):
-    _attrs = ('date', 'amount', 'info', 'account', 'category', 'id')
-
-    def __init__(self, date, amount, info, acc_id , cat_id , trans_id):
-        self.date = date
-        self.amount = amount / 100    # from cents
-        self.info = info
-        self.account = acc_id
-        self.category = cat_id
-        self.id = trans_id
+Category = namedtuple('Category', ['name', 'parent', 'id'])

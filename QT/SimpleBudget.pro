@@ -20,4 +20,5 @@ FORMS    += \
     manageTransaction.ui \
     mainWindow.ui \
     manageAccounts.ui \
-    transactionsRoll.ui
+    transactionsRoll.ui \
+    manageCategories.ui

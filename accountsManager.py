@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import QDialog, QInputDialog, QMessageBox
 from PyQt5.QtCore import QItemSelectionModel, Qt, QModelIndex
 
 import ui.manageAccounts
-from models import AccountsListModel
-from enums import ACCOUNT_TYPES
+from models import ListModel
+from enums import ACCOUNT_TYPES, Account
 
 
 class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
@@ -13,7 +13,7 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
 
         self.storage = storage
 
-        self.accounts = AccountsListModel()
+        self.accounts = ListModel()
         self.accountsView.setModel(self.accounts)
 
         self.selection = QItemSelectionModel(self.accounts)
@@ -32,7 +32,8 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         self.deleteAccountButton.clicked.connect(self.delete_account)
 
         for acc in self.storage.select_accounts():
-            self.accounts.addItem(acc)
+            self.accounts.addItem(Account(*acc))
+
 
     def selection_changed(self, curr_index: QModelIndex, prev_index: QModelIndex):
         if not curr_index.isValid():
@@ -119,7 +120,7 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
 
         if ok and name:
             acc = self.storage.add_account(name)
-            self.accounts.addItem(acc)
+            self.accounts.addItem(Account(*acc))
 
     def delete_account(self):
         model_indexes = self.selection.selectedIndexes()

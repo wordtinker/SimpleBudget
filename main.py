@@ -12,6 +12,7 @@ import config
 from enums import ACCOUNT_TYPES, Account
 from storage import Storage
 from accountsManager import AccountsManager
+from categoriesManager import CategoriesManager
 from transactionsRoll import TransactionsRoll
 
 # Define working directory for app
@@ -84,6 +85,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.actionCloseFile.triggered.connect(self.close_file)
         self.actionQuit.triggered.connect(self.exit_action_triggered)
         self.actionManageAccounts.triggered.connect(self.manage_accounts)
+        self.actionManageCategories.triggered.connect(self.manage_categories)
 
         self.accountsTree.doubleClicked.connect(self.account_clicked)
 
@@ -157,6 +159,19 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
             # Update if there was changes
             self.show_accounts()
+
+    def manage_categories(self):
+        """
+        Fires up the widget to manage accounts
+        """
+        if self.storage and self.accounts:
+            cat_manager = CategoriesManager(self.storage)
+
+            self.menuBar.setEnabled(False)
+
+            cat_manager.exec()
+
+            self.menuBar.setEnabled(True)
 
     def show_accounts(self):
         self.accounts = AccountsTree(self.storage)
