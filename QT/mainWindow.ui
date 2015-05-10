@@ -97,6 +97,7 @@
     </property>
     <addaction name="actionManageAccounts"/>
     <addaction name="actionManageCategories"/>
+    <addaction name="actionBudget"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuManage"/>
@@ -111,27 +112,39 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionNewFile"/>
    <addaction name="actionOpenFile"/>
    <addaction name="separator"/>
    <addaction name="actionManageAccounts"/>
    <addaction name="actionManageCategories"/>
+   <addaction name="actionBudget"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionManageAccounts">
+   <property name="icon">
+    <iconset resource="iconset.qrc">
+     <normaloff>:/icons/dollar178.svg</normaloff>:/icons/dollar178.svg</iconset>
+   </property>
    <property name="text">
-    <string>ManageAccounts</string>
+    <string>Accounts</string>
    </property>
    <property name="toolTip">
-    <string>Manage Accounts</string>
+    <string>Accounts</string>
    </property>
   </action>
   <action name="actionOpenFile">
+   <property name="icon">
+    <iconset resource="iconset.qrc">
+     <normaloff>:/icons/door24.svg</normaloff>:/icons/door24.svg</iconset>
+   </property>
    <property name="text">
     <string>Open a file</string>
    </property>
   </action>
   <action name="actionNewFile">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/iconset/iconset/svg/add189.svg</normaloff>:/iconset/iconset/svg/add189.svg</iconset>
+   </property>
    <property name="text">
     <string>New file</string>
    </property>
@@ -150,12 +163,30 @@
    </property>
   </action>
   <action name="actionManageCategories">
+   <property name="icon">
+    <iconset resource="iconset.qrc">
+     <normaloff>:/icons/bookmark49.svg</normaloff>:/icons/bookmark49.svg</iconset>
+   </property>
    <property name="text">
-    <string>ManageCateegories</string>
+    <string>Categories</string>
+   </property>
+   <property name="toolTip">
+    <string>Categories</string>
+   </property>
+  </action>
+  <action name="actionBudget">
+   <property name="icon">
+    <iconset resource="iconset.qrc">
+     <normaloff>:/icons/left225.svg</normaloff>:/icons/left225.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Budget</string>
    </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="iconset.qrc"/>
+ </resources>
  <connections/>
 </ui>

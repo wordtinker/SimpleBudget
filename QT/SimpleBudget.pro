@@ -22,3 +22,6 @@ FORMS    += \
     manageAccounts.ui \
     transactionsRoll.ui \
     manageCategories.ui
+
+RESOURCES += \
+    iconset.qrc
