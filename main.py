@@ -45,6 +45,7 @@ class AccountsTree(TreeModel):
         account_dict = dict((i, []) for i in ACCOUNT_TYPES)  # FIXME order
 
         for acc in accounts:
+            acc.balance /= 100  # from cents
             account_dict[acc.type].append(acc)
         account_dict = {k: v for k, v in account_dict.items() if len(v) > 0}
 
@@ -56,12 +57,12 @@ class AccountsTree(TreeModel):
                 item.appendChild(acc_item)
             # Add type total
             if len(accs) > 1:
-                sub_balance = sum(acc.balance for acc in accs if not acc.extotal)  # FIXME testing
+                sub_balance = sum(acc.balance for acc in accs if not acc.extotal)
                 subtotal = TreeItem(('Total', '', sub_balance, '', '', '', ''), item)
                 item.appendChild(subtotal)
 
         # Add grand total
-        total_balance = sum([acc.balance for acc in accounts if not acc.extotal])  # FIXME testing
+        total_balance = sum([acc.balance for acc in accounts if not acc.extotal])
         total = TreeItem(('Grand Total', '', total_balance, '', '', '', ''), self.rootItem)
         self.rootItem.appendChild(total)
 

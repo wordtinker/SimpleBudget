@@ -137,5 +137,15 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         ret = msgBox.exec()
 
         if ret == QMessageBox.Ok:
-            self.storage.delete_account(acc.id)
-            self.accounts.removeRow(model_index.row())
+            deletion = self.storage.delete_account(acc.id)
+            if not deletion:
+                self.show_warning("Can't delete account.")
+            else:
+                self.accounts.removeRow(model_index.row())
+
+    def show_warning(self, text):
+        msg_box = QMessageBox()
+        msg_box.setText(text)
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.setDefaultButton(QMessageBox.Ok)
+        msg_box.exec()

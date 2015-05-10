@@ -14,7 +14,7 @@ class Storage:
         CREATE TABLE IF NOT EXISTS Accounts(
         name TEXT,
         type TEXT,
-        balance REAL,
+        balance INTEGER,
         closed INTEGER,
         exbudget INTEGER,
         extotal INTEGER)""")
@@ -105,12 +105,34 @@ class Storage:
         rowid = db_cursor.lastrowid
         return acc + (rowid, )
 
-    def delete_account(self, acc_id):  # TODO Cascade delete transactions or forbid deletion?
+    def delete_account(self, acc_id):
+        # Cant delete if there is a transaction on account
+        transactions = self.select_transactions(acc_id)
+        if len(transactions) > 0:
+            return False
+
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         DELETE FROM Accounts
         WHERE rowid=?
         """, (acc_id, ))
+        self.db_conn.commit()
+        return True
+
+    def update_total(self, acc_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT SUM(amount)
+        FROM Transactions
+        WHERE acc_id=?
+        """, (acc_id, ))
+        total, *_ = db_cursor.fetchone()
+
+        db_cursor.execute("""
+        UPDATE Accounts
+        SET balance=?
+        WHERE rowid=?
+        """, (total, acc_id))
         self.db_conn.commit()
 
     # ################### Transactions #####################
@@ -140,9 +162,10 @@ class Storage:
         """, (date, amount, info, acc_id, category_id))
         self.db_conn.commit()
         rowid = db_cursor.lastrowid
+        self.update_total(acc_id)
         return date.isoformat(), amount, info, category_id, rowid
 
-    def update_transaction(self, trans_id, date, amount, info, category_id):
+    def update_transaction(self, trans_id, acc_id,  date, amount, info, category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         UPDATE Transactions
@@ -150,14 +173,16 @@ class Storage:
         WHERE rowid=?
         """, (date, amount, info, category_id, trans_id))
         self.db_conn.commit()
+        self.update_total(acc_id)
 
-    def delete_transaction(self, trans_id):
+    def delete_transaction(self, trans_id, acc_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         DELETE FROM Transactions
         WHERE rowid=?
         """, (trans_id, ))
         self.db_conn.commit()
+        self.update_total(acc_id)
 
     # #################### Categories #####################
 

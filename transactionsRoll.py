@@ -67,7 +67,7 @@ class TransactionsRoll(Ui_Dialog, QDialog):
         index = self.selection.currentIndex()
         if index.isValid():
             transaction = index.data(role=Qt.UserRole)
-            self.storage.delete_transaction(transaction.id)
+            self.storage.delete_transaction(transaction.id, self.id)
             self.roll.removeRows(index.row(), 1)
 
     def transaction_created(self, date, amount, info, category_id):
@@ -78,5 +78,5 @@ class TransactionsRoll(Ui_Dialog, QDialog):
 
     def transaction_edited(self, date, amount, info, category_id, trans_id):
         self.storage.\
-            update_transaction(trans_id, date, amount, info, category_id)
+            update_transaction(trans_id, self.id, date, amount, info, category_id)
         self.show_transactions()
