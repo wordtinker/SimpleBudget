@@ -72,7 +72,7 @@ class Ui_manageTransaction(object):
 
     def retranslateUi(self, manageTransaction):
         _translate = QtCore.QCoreApplication.translate
-        manageTransaction.setWindowTitle(_translate("manageTransaction", "Manage Transaction"))
+        manageTransaction.setWindowTitle(_translate("manageTransaction", "Transaction"))
         self.label.setText(_translate("manageTransaction", "Date"))
         self.label_2.setText(_translate("manageTransaction", "Category"))
         self.label_4.setText(_translate("manageTransaction", "Amount"))

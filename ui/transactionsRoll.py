@@ -39,7 +39,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        Dialog.setWindowTitle(_translate("Dialog", "Transaction Roll"))
         self.addTransaction.setText(_translate("Dialog", "Add"))
         self.editTransaction.setText(_translate("Dialog", "Edit"))
         self.deleteTransaction.setText(_translate("Dialog", "Delete"))
