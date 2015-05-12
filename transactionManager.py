@@ -1,23 +1,7 @@
-from PyQt5.Qt import QDialog, pyqtSignal, QDate, QVariant, Qt
+from PyQt5.Qt import QDialog, pyqtSignal, QDate, Qt
 from ui.manageTransaction import Ui_manageTransaction
 import datetime
-from models import ListModel
-
-
-class ShortListMosdel(ListModel):
-    def data(self, index, role=None):
-        if not index.isValid():
-            return QVariant()
-
-        # User role for returning whole Item
-        if role == Qt.UserRole:
-            return QVariant(self.items[index.row()])
-
-        if role != Qt.DisplayRole:
-            return QVariant()
-
-        item = self.items[index.row()]
-        return QVariant(item.parent + '::' + item.name)
+from models import CategoryListModel
 
 
 class Manager(Ui_manageTransaction, QDialog):
@@ -34,7 +18,7 @@ class Manager(Ui_manageTransaction, QDialog):
         self.categories = categories
         self.transaction = transaction
         # List all categories
-        self.categories_model = ShortListMosdel()
+        self.categories_model = CategoryListModel()
         for cat in self.categories:
             self.categories_model.addItem(cat)
         self.categorysBox.setModel(self.categories_model)
@@ -61,7 +45,6 @@ class Manager(Ui_manageTransaction, QDialog):
                 self.editedTransaction\
                     .emit(date, amount, info, category_id, self.transaction.id)
             QDialog.accept(self)
-            return
 
     def is_valid(self):
         return self.dateEdit.date().isValid()

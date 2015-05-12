@@ -230,3 +230,19 @@ class TableModel(QAbstractTableModel):
         self.items[0] = item
         self.dataChanged.emit(self.index(0, 0), self.index(0, 0))
         return 0  # row
+
+
+class CategoryListModel(ListModel):
+    def data(self, index, role=None):
+        if not index.isValid():
+            return QVariant()
+
+        # User role for returning whole Item
+        if role == Qt.UserRole:
+            return QVariant(self.items[index.row()])
+
+        if role != Qt.DisplayRole:
+            return QVariant()
+
+        item = self.items[index.row()]
+        return QVariant(item.parent + '::' + item.name)
