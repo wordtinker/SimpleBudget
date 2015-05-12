@@ -22,7 +22,8 @@ FORMS    += \
     manageAccounts.ui \
     transactionsRoll.ui \
     manageCategories.ui \
-    manageBudget.ui
+    manageBudget.ui \
+    manageRecord.ui
 
 RESOURCES += \
     iconset.qrc
