@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QDialog, QMessageBox
 from PyQt5.Qt import Qt
 from models import TreeModel, TreeItem
 import ui.manageCategories
-from enums import Category
+from utils import Category
 
 
 class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):

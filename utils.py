@@ -43,3 +43,17 @@ def build_transaction(query_result, categories):
     category = parent + '::' + name
     amount = from_cents(amount)
     return Transaction(date, amount, info, category, rowid, category_id)
+
+Record = namedtuple('Record', ['amount', 'category', 'type', 'day',
+                               'year', 'month', 'id', 'category_id'])
+
+
+def build_record(query_result, categories):
+    amount, category_id, budget_type, day, year, month, rowid = query_result
+    name, parent, _ = categories[category_id]
+    category = parent + '::' + name
+    amount = from_cents(amount)
+    return Record(amount, category, budget_type, day, year, month,
+                  rowid, category_id)
+
+Category = namedtuple('Category', ['name', 'parent', 'id'])

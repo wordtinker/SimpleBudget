@@ -2,10 +2,9 @@ from PyQt5.Qt import QDialog, QItemSelectionModel
 from PyQt5.QtCore import Qt
 
 from ui.transactionsRoll import Ui_Dialog
-from models import TableModel
-from enums import Category
-from utils import Transaction, build_transaction
 from transactionManager import Manager
+from models import TableModel
+from utils import build_transaction, Category
 
 
 class TransactionsRoll(Ui_Dialog, QDialog):
@@ -65,6 +64,6 @@ class TransactionsRoll(Ui_Dialog, QDialog):
         self.roll.addRow(transaction)
 
     def transaction_edited(self, date, amount, info, category_id, trans_id):
-        self.storage.\
-            update_transaction(trans_id, self.id, date, amount, info, category_id)
+        self.storage.update_transaction(
+            trans_id, self.id, date, amount, info, category_id)
         self.show_transactions()

@@ -4,22 +4,11 @@ from PyQt5.Qt import QDate, QItemSelectionModel, Qt
 import ui.manageBudget
 from recordManager import Manager
 from models import TableModel
-from enums import YEARS, MONTHS, Category, Record
+from enums import YEARS, MONTHS
+from utils import build_record, Category
 
 
 class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
-    def build_record(self, DB_query_result):
-        params = list(DB_query_result)
-
-        category_id = params[1]
-        name, parent, _ = self.categories[category_id]
-        params[1] = parent + '::' + name
-        params.append(category_id)
-
-        params[0] /= 100  # From cents
-
-        return Record(*params)
-
     def __init__(self, storage):
         super().__init__()
         self.setupUi(self)
@@ -62,7 +51,7 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         self.records.prepare()
         month = self.monthBox.currentIndex()  # by position
         year = self.yearBox.currentText()
-        records = [self.build_record(r)
+        records = [build_record(r, self.categories)
                    for r in self.storage.select_records(month, year)]
         for r in records:
             self.records.addRow(r)
@@ -94,11 +83,11 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
                        month):
         result = self.storage.add_record(amount, category_id, budget_type, day,
                                          year, month)
-        record = self.build_record(result)
+        record = build_record(result, self.categories)
         self.records.addRow(record)
 
     def record_edited(self, amount, category_id, budget_type, day, year,
-                       month, record_id):
+                      month, record_id):
         self.storage.update_record(amount, category_id, budget_type, day, year,
-                       month, record_id)
+                                   month, record_id)
         self.load_budget_records()

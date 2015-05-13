@@ -129,7 +129,7 @@ class Storage:
         self.db_conn.commit()
         return True
 
-    def update_total(self, acc_id):
+    def update_total(self, acc_id):  # FIXME bug total None if last tr deleted
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         SELECT SUM(amount)

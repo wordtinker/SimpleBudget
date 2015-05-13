@@ -2,6 +2,7 @@ from PyQt5.Qt import QDialog, pyqtSignal, QDate, Qt
 from ui.manageRecord import Ui_Dialog
 from models import CategoryListModel
 from enums import YEARS, MONTHS, BUDGET_TYPES
+from utils import to_cents
 
 
 class Manager(Ui_Dialog, QDialog):
@@ -63,7 +64,7 @@ class Manager(Ui_Dialog, QDialog):
             self.dayBox.setEnabled(True)
 
     def accept(self):
-        amount = int(self.budgetBox.value() * 100)  # to cents
+        amount = to_cents(self.budgetBox.value())
         category_id = self.categoryBox.currentData(role=Qt.UserRole).id
         account_type = self.typeBox.currentText()
         on_day = self.dayBox.value()
