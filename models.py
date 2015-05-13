@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt,\
     QAbstractListModel, QVariant, QAbstractTableModel
+from decimal import Decimal
 
 
 class TreeItem:
@@ -22,7 +23,11 @@ class TreeItem:
 
     def data(self, column):
         try:
-            return self.itemData[column]
+            item = self.itemData[column]
+            if isinstance(item, Decimal):
+                return str(item)
+            else:
+                return item
         except IndexError:
             return None
 

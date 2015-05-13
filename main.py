@@ -9,7 +9,8 @@ import sys
 import logging
 
 import config
-from enums import ACCOUNT_TYPES, Account
+from enums import ACCOUNT_TYPES
+from utils import Account
 from storage import Storage
 from accountsManager import AccountsManager
 from categoriesManager import CategoriesManager
@@ -46,7 +47,6 @@ class AccountsTree(TreeModel):
         account_dict = dict((i, []) for i in ACCOUNT_TYPES)  # FIXME order
 
         for acc in accounts:
-            acc.balance /= 100  # from cents
             account_dict[acc.type].append(acc)
         account_dict = {k: v for k, v in account_dict.items() if len(v) > 0}
 
@@ -194,7 +194,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def show_accounts(self):
         self.accounts = AccountsTree(self.storage)
         self.accountsTree.setModel(self.accounts)
-        self.accountsTree.hideColumn(1)
+        self.accountsTree.hideColumn(1)  # FIXME __FUTURE__
         self.accountsTree.hideColumn(3)
         self.accountsTree.hideColumn(4)
         self.accountsTree.hideColumn(5)
@@ -203,7 +203,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def account_clicked(self, index: QModelIndex):
         acc = index.data(role=Qt.UserRole)
-        if type(acc) != Account:
+        if not isinstance(acc, Account):
             return
 
         transaction_manager = TransactionsRoll(self.storage, acc.id)

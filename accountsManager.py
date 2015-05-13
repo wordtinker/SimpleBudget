@@ -3,7 +3,8 @@ from PyQt5.QtCore import QItemSelectionModel, Qt, QModelIndex
 
 import ui.manageAccounts
 from models import ListModel
-from enums import ACCOUNT_TYPES, Account
+from enums import ACCOUNT_TYPES
+from utils import Account
 
 
 class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
@@ -33,7 +34,6 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
 
         for acc in self.storage.select_accounts():
             self.accounts.addItem(Account(*acc))
-
 
     def selection_changed(self, curr_index: QModelIndex, prev_index: QModelIndex):
         if not curr_index.isValid():
