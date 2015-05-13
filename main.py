@@ -14,6 +14,7 @@ from storage import Storage
 from accountsManager import AccountsManager
 from categoriesManager import CategoriesManager
 from transactionsRoll import TransactionsRoll
+from budgetManager import BudgetManager
 
 # Define working directory for app
 if "APPDATA" in os.environ:  # We are on Windows
@@ -87,6 +88,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.actionQuit.triggered.connect(self.exit_action_triggered)
         self.actionManageAccounts.triggered.connect(self.manage_accounts)
         self.actionManageCategories.triggered.connect(self.manage_categories)
+        self.actionBudget.triggered.connect(self.manage_budget)
 
         self.accountsTree.doubleClicked.connect(self.account_clicked)
 
@@ -173,6 +175,21 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             cat_manager.exec()
 
             self.menuBar.setEnabled(True)
+
+    def manage_budget(self):
+        """
+        Fires up the widget to manage budget
+        """
+        if self.storage and self.accounts:
+            budget_manager = BudgetManager(self.storage)
+
+            self.menuBar.setEnabled(False)
+
+            budget_manager.exec()
+
+            self.menuBar.setEnabled(True)
+            # Update budget report
+            # TODO
 
     def show_accounts(self):
         self.accounts = AccountsTree(self.storage)

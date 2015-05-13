@@ -41,6 +41,17 @@ class Storage:
         UNIQUE(name, parent))""")
         self.db_conn.commit()
 
+        self.db_cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Budget(
+        amount INTEGER,
+        category_id INTEGER,
+        type TEXT,
+        day INTEGER,
+        year INTEGER,
+        month INTEGER
+        )""")
+        self.db_conn.commit()
+
     # #################### Accounts ########################
 
     def select_accounts_summary(self):
@@ -106,7 +117,7 @@ class Storage:
         return acc + (rowid, )
 
     def delete_account(self, acc_id):
-        # Cant delete if there is a transaction on account
+        # Cant delete if there is a transaction on account  # FIXME EXISTS
         transactions = self.select_transactions(acc_id)
         if len(transactions) > 0:
             return False
@@ -234,7 +245,7 @@ class Storage:
             return False
 
     def delete_category(self, category):
-        # Can't delete if there is a child category
+        # Can't delete if there is a child category  # FIXME EXISTS
         children = self.select_subcategories(category)
         if len(children) > 0:
             return False
@@ -249,10 +260,14 @@ class Storage:
         return True
 
     def delete_subcategory(self, category_id):
-        # Can't delete if there is a transaction
+        # Can't delete if there is a transaction  # FIXME EXISTS
         transactions = self.select_transactions_for_category(category_id)
         if len(transactions) > 0:
             return False
+
+        # TODO Can't delete if there is a budget record
+        # budgets =
+
 
         # Delete the subcategory
         db_cursor = self.db_conn.cursor()
@@ -262,3 +277,47 @@ class Storage:
         """, (category_id, ))
         self.db_conn.commit()
         return True
+
+# #################### Budgets ########################
+
+    def select_records(self, month, year):
+        db_cursor = self.db_conn.cursor()
+        if month == 0:
+            db_cursor.execute("""
+            SELECT *, rowid
+            FROM Budget
+            WHERE year=?""", (year,))
+        else:
+            db_cursor.execute("""
+            SELECT *, rowid
+            FROM Budget
+            WHERE month=? AND year=?""", (month, year))
+        return db_cursor.fetchall()
+
+    def add_record(self, amount, category_id, budget_type, day, year, month):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        INSERT INTO Budget
+        VALUES(?, ?, ?, ?, ?, ?)
+        """, (amount, category_id, budget_type, day, year, month))
+        self.db_conn.commit()
+        rowid = db_cursor.lastrowid
+        return amount, category_id, budget_type, day, year, month, rowid
+
+    def update_record(self, amount, category_id, budget_type, day, year, month,
+                      record_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        UPDATE Budget
+        SET amount=?, category_id=?, type=?, day=?, year=?, month=?
+        WHERE rowid=?
+        """, (amount, category_id, budget_type, day, year, month, record_id))
+        self.db_conn.commit()
+
+    def delete_record(self, rowid):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        DELETE FROM Budget
+        WHERE rowid=?
+        """, (rowid, ))
+        self.db_conn.commit()
