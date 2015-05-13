@@ -69,40 +69,40 @@ class Storage:
         FROM Accounts""")
         return db_cursor.fetchall()
 
-    def update_account_type(self, id, value):
+    def update_account_type(self, acc_id, value):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         UPDATE Accounts
         SET type=?
         WHERE rowid=?
-        """, (value, id))
+        """, (value, acc_id))
         self.db_conn.commit()
 
-    def update_account_status(self, id, value):
+    def update_account_status(self, acc_id, value):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         UPDATE Accounts
         SET closed=?
         WHERE rowid=?
-        """, (value, id))
+        """, (value, acc_id))
         self.db_conn.commit()
 
-    def update_account_budget_status(self, id, value):
+    def update_account_budget_status(self, acc_id, value):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         UPDATE Accounts
         SET exbudget=?
         WHERE rowid=?
-        """, (value, id))
+        """, (value, acc_id))
         self.db_conn.commit()
 
-    def update_account_total_status(self, id, value):
+    def update_account_total_status(self, acc_id, value):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         UPDATE Accounts
         SET extotal=?
         WHERE rowid=?
-        """, (value, id))
+        """, (value, acc_id))
         self.db_conn.commit()
 
     def add_account(self, acc_name):
@@ -117,9 +117,8 @@ class Storage:
         return acc + (rowid, )
 
     def delete_account(self, acc_id):
-        # Cant delete if there is a transaction on account  # FIXME EXISTS
-        transactions = self.select_transactions(acc_id)
-        if len(transactions) > 0:
+        # Cant delete if there is a transaction on account
+        if self.exists_transaction(acc_id):
             return False
 
         db_cursor = self.db_conn.cursor()
@@ -157,6 +156,15 @@ class Storage:
         ORDER BY date ASC""", (acc_id,))
         return db_cursor.fetchall()
 
+    def exists_transaction(self, acc_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT COUNT(*)
+        FROM Transactions
+        WHERE acc_id = ?""", (acc_id,))
+        count = db_cursor.fetchone()[0]
+        return count > 0
+
     def select_transactions_for_category(self, category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
@@ -164,6 +172,15 @@ class Storage:
         FROM Transactions
         WHERE category_id = ?""", (category_id,))
         return db_cursor.fetchall()
+
+    def exists_transaction_for_category(self, category_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT COUNT(*)
+        FROM Transactions
+        WHERE category_id = ?""", (category_id,))
+        count = db_cursor.fetchone()[0]
+        return count > 0
 
     def add_transaction(self, date, amount, info, acc_id, category_id):
         db_cursor = self.db_conn.cursor()
@@ -176,7 +193,8 @@ class Storage:
         self.update_total(acc_id)
         return date.isoformat(), amount, info, category_id, rowid
 
-    def update_transaction(self, trans_id, acc_id,  date, amount, info, category_id):
+    def update_transaction(self, trans_id, acc_id,  date, amount, info,
+                           category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         UPDATE Transactions
@@ -213,6 +231,15 @@ class Storage:
         WHERE parent=?""", (category, ))
         return db_cursor.fetchall()
 
+    def exists_subcategory(self, category):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT COUNT(*)
+        FROM Subcategories
+        WHERE parent=?""", (category, ))
+        count = db_cursor.fetchone()[0]
+        return count > 0
+
     def select_all_subcategories(self):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
@@ -245,9 +272,8 @@ class Storage:
             return False
 
     def delete_category(self, category):
-        # Can't delete if there is a child category  # FIXME EXISTS
-        children = self.select_subcategories(category)
-        if len(children) > 0:
+        # Can't delete if there is a child category
+        if self.exists_subcategory(category):
             return False
 
         # Delete the category
@@ -260,14 +286,10 @@ class Storage:
         return True
 
     def delete_subcategory(self, category_id):
-        # Can't delete if there is a transaction  # FIXME EXISTS
-        transactions = self.select_transactions_for_category(category_id)
-        if len(transactions) > 0:
+        # Can't delete if there is a transaction or budget record
+        if (self.exists_transaction_for_category(category_id) or
+                self.exists_record_for_category(category_id)):
             return False
-
-        # TODO Can't delete if there is a budget record
-        # budgets =
-
 
         # Delete the subcategory
         db_cursor = self.db_conn.cursor()
@@ -293,6 +315,15 @@ class Storage:
             FROM Budget
             WHERE month=? AND year=?""", (month, year))
         return db_cursor.fetchall()
+
+    def exists_record_for_category(self, category_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT COUNT(*)
+        FROM Budget
+        WHERE category_id = ?""", (category_id,))
+        count = db_cursor.fetchone()[0]
+        return count > 0
 
     def add_record(self, amount, category_id, budget_type, day, year, month):
         db_cursor = self.db_conn.cursor()

@@ -30,7 +30,7 @@ class Account:
         return len(self._attrs)
 
 Transaction = namedtuple(
-    'Transaction', ['date', 'amount', 'info', 'category', 'category_id', 'id'])
+    'Transaction', ['date', 'amount', 'info', 'category', 'id', 'category_id'])
 
 Category = namedtuple('Category', ['name', 'parent', 'id'])
 
