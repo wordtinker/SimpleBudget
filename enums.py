@@ -9,8 +9,7 @@ BUDGET_TYPES = ('Monthly', 'Point', 'Daily', 'Weekly')
 
 
 
-Transaction = namedtuple(
-    'Transaction', ['date', 'amount', 'info', 'category', 'id', 'category_id'])
+
 
 Category = namedtuple('Category', ['name', 'parent', 'id'])
 

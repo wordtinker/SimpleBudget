@@ -2,6 +2,7 @@ from PyQt5.Qt import QDialog, pyqtSignal, QDate, Qt
 from ui.manageTransaction import Ui_manageTransaction
 import datetime
 from models import CategoryListModel
+from utils import to_cents
 
 
 class Manager(Ui_manageTransaction, QDialog):
@@ -36,9 +37,9 @@ class Manager(Ui_manageTransaction, QDialog):
     def accept(self):
         if self.is_valid():
             date = self.dateEdit.date().toPyDate()
-            amount = int(self.amountBox.value() * 100)  # to cents
+            amount = to_cents(self.amountBox.value())
             info = self.infoEdit.text()
-            category_id = self.categorysBox.currentData(role=Qt.UserRole).id
+            category_id = self.categorysBox.currentData(role=Qt.UserRole).id  # FIXME bug if no category exists
             if self.transaction is None:
                 self.createdTransaction.emit(date, amount, info, category_id)
             else:

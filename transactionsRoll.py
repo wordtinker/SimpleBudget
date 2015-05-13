@@ -3,24 +3,12 @@ from PyQt5.QtCore import Qt
 
 from ui.transactionsRoll import Ui_Dialog
 from models import TableModel
-from enums import Transaction, Category
+from enums import Category
+from utils import Transaction, build_transaction
 from transactionManager import Manager
 
 
 class TransactionsRoll(Ui_Dialog, QDialog):
-
-    def build_transaction(self, DB_query_result):
-        params = list(DB_query_result)
-        category_id = params[3]
-
-        name, parent, _ = self.categories[category_id]
-        params[3] = parent + '::' + name
-        params.append(category_id)
-
-        params[1] /= 100  # From cents
-
-        return Transaction(*params)
-
     def __init__(self, storage, acc_id):
         super().__init__()
         self.setupUi(self)
@@ -45,7 +33,7 @@ class TransactionsRoll(Ui_Dialog, QDialog):
 
     def show_transactions(self):
         self.roll.prepare()
-        transactions = [self.build_transaction(t)
+        transactions = [build_transaction(t, self.categories)
                         for t in self.storage.select_transactions(self.id)]
         for tr in transactions:
             self.roll.addRow(tr)
@@ -73,7 +61,7 @@ class TransactionsRoll(Ui_Dialog, QDialog):
     def transaction_created(self, date, amount, info, category_id):
         tr = self.storage.\
             add_transaction(date, amount, info, self.id, category_id)
-        transaction = self.build_transaction(tr)
+        transaction = build_transaction(tr, self.categories)
         self.roll.addRow(transaction)
 
     def transaction_edited(self, date, amount, info, category_id, trans_id):

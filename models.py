@@ -199,7 +199,10 @@ class TableModel(QAbstractTableModel):
             return QVariant()
 
         data = self.items[index.row()][index.column()]
-        return QVariant(data)
+        if isinstance(data, Decimal):
+            return QVariant(str(data))
+        else:
+            return QVariant(data)
 
     def headerData(self, col, orientation, role=None):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
