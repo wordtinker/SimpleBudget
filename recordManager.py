@@ -65,7 +65,7 @@ class Manager(Ui_Dialog, QDialog):
 
     def accept(self):
         amount = to_cents(self.budgetBox.value())
-        category_id = self.categoryBox.currentData(role=Qt.UserRole).id  # FIXME no category bug!
+        category_id = self.categoryBox.currentData(role=Qt.UserRole).id
         account_type = self.typeBox.currentText()
         on_day = self.dayBox.value()
         year = int(self.yearBox.currentText())

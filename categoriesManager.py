@@ -1,8 +1,8 @@
-from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog
 from PyQt5.Qt import Qt
 from models import TreeModel, TreeItem
 import ui.manageCategories
-from utils import Category
+from utils import Category, show_warning
 
 
 class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
@@ -60,7 +60,7 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
             addition = self.storage.add_subcategory(name, parent)
 
         if not addition:
-            self.show_warning("Category already exists.")
+            show_warning("Category already exists.")
         else:
             self.show_categories()
             if parent == '':
@@ -78,15 +78,8 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
                 deletion = self.storage.delete_category(category.name)
 
             if not deletion:
-                self.show_warning("Can't delete category")
+                show_warning("Can't delete category")
             else:
                 self.show_categories()
                 if category.parent is None:
                     self.show_available_parents()
-
-    def show_warning(self, text):
-        msg_box = QMessageBox()
-        msg_box.setText(text)
-        msg_box.setStandardButtons(QMessageBox.Ok)
-        msg_box.setDefaultButton(QMessageBox.Ok)
-        msg_box.exec()

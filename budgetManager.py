@@ -5,7 +5,7 @@ import ui.manageBudget
 from recordManager import Manager
 from models import TableModel
 from enums import YEARS, MONTHS
-from utils import build_record, Category
+from utils import build_record, Category, show_warning
 
 
 class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
@@ -57,6 +57,10 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
             self.records.addRow(r)
 
     def add_record(self):
+        if len(self.categories) == 0:
+            show_warning('You have to create categories first.')
+            return
+        
         manager = Manager(self.categories.values())
         manager.createdRecord.connect(self.record_created)
         manager.exec()

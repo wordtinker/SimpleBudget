@@ -1,5 +1,14 @@
 from collections import namedtuple
 import decimal
+from PyQt5.Qt import QMessageBox
+
+
+def show_warning(text):
+    msg_box = QMessageBox()
+    msg_box.setText(text)
+    msg_box.setStandardButtons(QMessageBox.Ok)
+    msg_box.setDefaultButton(QMessageBox.Ok)
+    msg_box.exec()
 
 
 def from_cents(cents: int):
