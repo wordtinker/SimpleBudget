@@ -7,6 +7,7 @@ from ui.mainWindow import Ui_MainWindow
 import os
 import sys
 import logging
+from collections import OrderedDict
 
 import config
 from enums import ACCOUNT_TYPES
@@ -36,6 +37,14 @@ def update_recent(name=''):
         recent.write(name)
 
 
+def order_accounts(accounts):
+    account_dict = OrderedDict((i, []) for i in ACCOUNT_TYPES)
+
+    for acc in accounts:
+        account_dict[acc.type].append(acc)
+    return OrderedDict((k, v) for k, v in account_dict.items() if len(v) > 0)
+
+
 class AccountsTree(TreeModel):
     def __init__(self, storage):
         super().__init__(('Account', '', 'Balance', '', '', '', ''))
@@ -44,11 +53,7 @@ class AccountsTree(TreeModel):
 
     def _update_accounts(self):
         accounts = [Account(*a) for a in self.storage.select_accounts_summary()]
-        account_dict = dict((i, []) for i in ACCOUNT_TYPES)  # FIXME order
-
-        for acc in accounts:
-            account_dict[acc.type].append(acc)
-        account_dict = {k: v for k, v in account_dict.items() if len(v) > 0}
+        account_dict = order_accounts(accounts)
 
         for key, accs in account_dict.items():
             item = TreeItem((key, '', '', '', '', '', ''), self.rootItem)

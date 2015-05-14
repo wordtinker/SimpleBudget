@@ -60,7 +60,7 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         if len(self.categories) == 0:
             show_warning('You have to create categories first.')
             return
-        
+
         manager = Manager(self.categories.values())
         manager.createdRecord.connect(self.record_created)
         manager.exec()
