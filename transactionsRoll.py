@@ -24,11 +24,18 @@ class TransactionsRoll(Ui_Dialog, QDialog):
         self.editTransaction.clicked.connect(self.edit_transaction)
         self.deleteTransaction.clicked.connect(self.delete_transaction)
 
-        # Fetch subcategories list
-        subs = self.storage.select_all_subcategories()
-        self.categories = dict(((rowid, Category(name, parent, rowid))
-                                for name, parent, rowid in subs))
+        self.categories = self.fetch_subcategories()
+
         self.show_transactions()
+
+    def fetch_subcategories(self):
+        subs = self.storage.select_all_subcategories()
+        categories = dict(((rowid, Category(name, parent, rowid))
+                          for name, parent, rowid in subs))
+
+        # Add empty category
+        categories[0] = Category(' - - - ', '', 0)
+        return categories
 
     def show_transactions(self):
         self.roll.prepare()

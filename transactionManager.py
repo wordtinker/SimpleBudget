@@ -39,7 +39,7 @@ class Manager(Ui_manageTransaction, QDialog):
             date = self.dateEdit.date().toPyDate()
             amount = to_cents(self.amountBox.value())
             info = self.infoEdit.text()
-            category_id = self.categorysBox.currentData(role=Qt.UserRole).id  # FIXME bug if no category exists
+            category_id = self.categorysBox.currentData(role=Qt.UserRole).id
             if self.transaction is None:
                 self.createdTransaction.emit(date, amount, info, category_id)
             else:
