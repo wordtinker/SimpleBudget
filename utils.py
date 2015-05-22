@@ -24,7 +24,7 @@ class Account:
     Using separate class because we need to set attributes in the
     accountsManager, can't use namedtuple.
     """
-    _attrs = ('name', 'type', 'balance', 'closed', 'exbudget', 'extotal', 'id')
+    _attrs = ('name', 'balance', 'type', 'closed', 'exbudget', 'extotal', 'id')
 
     def __init__(self, name, acc_type, balance, closed, exbudget, extotal,
                  acc_id):

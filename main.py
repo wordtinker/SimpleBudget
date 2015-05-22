@@ -50,7 +50,7 @@ def order_accounts(accounts):
 
 class AccountsTree(TreeModel):
     def __init__(self, storage):
-        super().__init__(('Account', '', 'Balance', '', '', '', ''))
+        super().__init__(('Account', 'Balance'))
         self.storage = storage
         self._update_accounts()
 
@@ -59,7 +59,7 @@ class AccountsTree(TreeModel):
         account_dict = order_accounts(accounts)
 
         for key, accs in account_dict.items():
-            item = TreeItem((key, '', '', '', '', '', ''), self.rootItem)
+            item = TreeItem((key, ''), self.rootItem)
             self.rootItem.appendChild(item)
             for acc in accs:
                 acc_item = TreeItem(acc, item)
@@ -67,12 +67,12 @@ class AccountsTree(TreeModel):
             # Add type total
             if len(accs) > 1:
                 sub_balance = sum(acc.balance for acc in accs if not acc.extotal)
-                subtotal = TreeItem(('Total', '', sub_balance, '', '', '', ''), item)
+                subtotal = TreeItem(('Total', sub_balance), item)
                 item.appendChild(subtotal)
 
         # Add grand total
         total_balance = sum([acc.balance for acc in accounts if not acc.extotal])
-        total = TreeItem(('Grand Total', '', total_balance, '', '', '', ''), self.rootItem)
+        total = TreeItem(('Grand Total', total_balance), self.rootItem)
         self.rootItem.appendChild(total)
 
 
@@ -106,11 +106,6 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def show_accounts(self):
         self.accounts = AccountsTree(self.storage)
         self.accountsTree.setModel(self.accounts)
-        self.accountsTree.hideColumn(1)  # FIXME __FUTURE__
-        self.accountsTree.hideColumn(3)
-        self.accountsTree.hideColumn(4)
-        self.accountsTree.hideColumn(5)
-        self.accountsTree.hideColumn(6)
         self.accountsTree.expandAll()
 
     def show_budget_report(self):
