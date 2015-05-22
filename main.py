@@ -113,7 +113,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.accountsTree.hideColumn(6)
         self.accountsTree.expandAll()
 
-    def show_budget_report(self):
+    def show_budget_report(self):  # TODO Scrolling
         self.clear_bars()
 
         year = datetime.date.today().year
@@ -122,12 +122,25 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         for i, record in enumerate(self.storage.get_budget_report(month, year)):
             category_id, budget, fact = record
-            budget = from_cents(abs(budget or 0))
-            fact = from_cents(abs(fact))  # FIXME that will glitch if budget and fact have different signs
+            budget = from_cents(budget or 0)
+            fact = from_cents(fact or 0)
             category = categories[category_id]
 
+            if budget == 0 and fact == 0:
+                continue
+            elif budget >= 0 and fact >= 0:  # Income
+                message = str(max(budget - fact, 0))
+            elif budget <= 0 and fact <= 0:  # Spending
+                message = str(min(budget - fact, 0))
+                budget = -budget
+                fact = -fact
+            else:  # budget and fact have different signs, error
+                message = 'Error'
+                budget = abs(budget)
+                fact = abs(fact)
+
             self.add_bar(category.parent + '::' + category.name,
-                         budget, fact, str(budget - fact), i)
+                         budget, fact, message, i)
 
         self.barsLayout.setColumnStretch(1, 1)
 
@@ -139,11 +152,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             # Remove from GUI
             widget.setParent(None)
 
-    def add_bar(self, category, budget, fact, difference, position):
+    def add_bar(self, category, budget, fact, expectations, position):
         self.barsLayout.addWidget(QLabel(category), position, 0)
         bar = QBar(fact, budget)
         self.barsLayout.addWidget(bar, position, 1)
-        self.barsLayout.addWidget(QLabel(difference), position, 2)
+        self.barsLayout.addWidget(QLabel(expectations), position, 2)
 
     def load_recent_file(self):
         file_name = ''

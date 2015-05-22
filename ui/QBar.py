@@ -59,4 +59,4 @@ class QBar(QWidget):
         # Print the maximum value at the center
         font = QFont('Serif', 7, QFont.Light)
         qp.setFont(font)
-        qp.drawText(w/2, h/2, str(self.max))
+        qp.drawText(w/2, h/2, '{} / {}'.format(self.value, self.max))

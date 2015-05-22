@@ -262,7 +262,8 @@ class Storage:
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         SELECT name, parent, rowid
-        FROM Subcategories""", ())
+        FROM Subcategories
+        ORDER BY parent, name""", ())
         return db_cursor.fetchall()
 
     def add_category(self, name):
