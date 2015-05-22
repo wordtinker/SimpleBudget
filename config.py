@@ -1,5 +1,5 @@
 APPNAME = 'Simple Budget'
 LOG = 'budget.log'
-VERSION = '0.5'
+VERSION = '0.6'
 RECENT = 'settings.txt'
 FILE_TYPE = '*.sbdb'

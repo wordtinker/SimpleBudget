@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PyQt5.QtCore import QModelIndex, Qt
+from PyQt5.QtWidgets import QHBoxLayout, QLabel
+from ui.QBar import QBar
 
 from models import TreeModel, TreeItem
 from ui.mainWindow import Ui_MainWindow
@@ -8,10 +10,11 @@ import os
 import sys
 import logging
 from collections import OrderedDict
+import datetime
 
 import config
 from enums import ACCOUNT_TYPES
-from utils import Account
+from utils import Account, fetch_subcategories, from_cents
 from storage import Storage
 from accountsManager import AccountsManager
 from categoriesManager import CategoriesManager
@@ -100,6 +103,48 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         # Try to open the most recent file
         self.load_recent_file()
 
+    def show_accounts(self):
+        self.accounts = AccountsTree(self.storage)
+        self.accountsTree.setModel(self.accounts)
+        self.accountsTree.hideColumn(1)  # FIXME __FUTURE__
+        self.accountsTree.hideColumn(3)
+        self.accountsTree.hideColumn(4)
+        self.accountsTree.hideColumn(5)
+        self.accountsTree.hideColumn(6)
+        self.accountsTree.expandAll()
+
+    def show_budget_report(self):
+        self.clear_bars()
+
+        year = datetime.date.today().year
+        month = datetime.date.today().month
+        categories = fetch_subcategories(self.storage)
+
+        for i, record in enumerate(self.storage.get_budget_report(month, year)):
+            category_id, budget, fact = record
+            budget = from_cents(abs(budget or 0))
+            fact = from_cents(abs(fact))  # FIXME that will glitch if budget and fact have different signs
+            category = categories[category_id]
+
+            self.add_bar(category.parent + '::' + category.name,
+                         budget, fact, str(budget - fact), i)
+
+        self.barsLayout.setColumnStretch(1, 1)
+
+    def clear_bars(self):
+        for i in reversed(range(self.barsLayout.count())):
+            widget = self.barsLayout.itemAt(i).widget()
+            # Detach from layout
+            self.barsLayout.removeWidget(widget)
+            # Remove from GUI
+            widget.setParent(None)
+
+    def add_bar(self, category, budget, fact, difference, position):
+        self.barsLayout.addWidget(QLabel(category), position, 0)
+        bar = QBar(fact, budget)
+        self.barsLayout.addWidget(bar, position, 1)
+        self.barsLayout.addWidget(QLabel(difference), position, 2)
+
     def load_recent_file(self):
         file_name = ''
         file_path = os.path.join(APP_DATA_PATH, config.RECENT)
@@ -135,6 +180,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.storage = Storage(name)
 
         self.show_accounts()
+        self.show_budget_report()
 
         # update recent filename
         update_recent(name)
@@ -167,6 +213,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
             # Update if there was changes
             self.show_accounts()
+            self.show_budget_report()
 
     def manage_categories(self):
         """
@@ -194,17 +241,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
             self.menuBar.setEnabled(True)
             # Update budget report
-            # TODO
-
-    def show_accounts(self):
-        self.accounts = AccountsTree(self.storage)
-        self.accountsTree.setModel(self.accounts)
-        self.accountsTree.hideColumn(1)  # FIXME __FUTURE__
-        self.accountsTree.hideColumn(3)
-        self.accountsTree.hideColumn(4)
-        self.accountsTree.hideColumn(5)
-        self.accountsTree.hideColumn(6)
-        self.accountsTree.expandAll()
+            self.show_budget_report()
 
     def account_clicked(self, index: QModelIndex):
         acc = index.data(role=Qt.UserRole)
@@ -221,6 +258,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         # Update if there was changes
         self.show_accounts()
+        self.show_budget_report()
 
 if __name__ == '__main__':
     # Ensure consistency of data dir

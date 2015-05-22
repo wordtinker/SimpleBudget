@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from ui.transactionsRoll import Ui_Dialog
 from transactionManager import Manager
 from models import TableModel
-from utils import build_transaction, Category
+from utils import build_transaction, fetch_subcategories
 
 
 class TransactionsRoll(Ui_Dialog, QDialog):
@@ -24,18 +24,9 @@ class TransactionsRoll(Ui_Dialog, QDialog):
         self.editTransaction.clicked.connect(self.edit_transaction)
         self.deleteTransaction.clicked.connect(self.delete_transaction)
 
-        self.categories = self.fetch_subcategories()
+        self.categories = fetch_subcategories(self.storage)
 
         self.show_transactions()
-
-    def fetch_subcategories(self):
-        subs = self.storage.select_all_subcategories()
-        categories = dict(((rowid, Category(name, parent, rowid))
-                          for name, parent, rowid in subs))
-
-        # Add empty category
-        categories[0] = Category(' - - - ', '', 0)
-        return categories
 
     def show_transactions(self):
         self.roll.prepare()

@@ -66,3 +66,12 @@ def build_record(query_result, categories):
                   rowid, category_id)
 
 Category = namedtuple('Category', ['name', 'parent', 'id'])
+
+def fetch_subcategories(storage):
+    subs = storage.select_all_subcategories()
+    categories = dict(((rowid, Category(name, parent, rowid))
+                      for name, parent, rowid in subs))
+
+    # Add empty category
+    categories[0] = Category(' - - - ', '', 0)
+    return categories

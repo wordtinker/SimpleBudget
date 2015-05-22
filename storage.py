@@ -1,4 +1,6 @@
 import sqlite3
+import datetime
+from calendar import monthrange
 
 from enums import ACCOUNT_TYPES
 
@@ -167,6 +169,20 @@ class Storage:
         count = db_cursor.fetchone()[0]
         return count > 0
 
+    def select_summary(self, month, year, category_id):
+        _, lastday = monthrange(year, month)
+        f_day = datetime.date(year, month, 1)
+        l_day = datetime.date(year, month, lastday)
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT sum(t.amount) FROM Transactions as t
+        INNER JOIN Accounts as a
+        on t.acc_id = a.rowid
+        WHERE date BETWEEN ? AND ?
+        AND category_id=?
+        AND exbudget = 0""", (f_day, l_day, category_id))
+        return db_cursor.fetchone()
+
     def select_transactions_for_category(self, category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
@@ -318,6 +334,14 @@ class Storage:
             WHERE month=? AND year=?""", (month, year))
         return db_cursor.fetchall()
 
+    def select_budget(self, month, year, category_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT sum(amount) FROM Budget
+        WHERE month=? AND year=? AND category_id=?""",
+                          (month, year, category_id))
+        return db_cursor.fetchone()
+
     def exists_record_for_category(self, category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
@@ -354,3 +378,13 @@ class Storage:
         WHERE rowid=?
         """, (rowid, ))
         self.db_conn.commit()
+
+    def get_budget_report(self, month, year):
+        subcategories =\
+            [cat_id for *_, cat_id in self.select_all_subcategories()]
+        subcategories.append(0)  # Include no category id
+
+        for cat_id in subcategories:
+            budget, *_ = self.select_budget(month, year, cat_id)
+            fact, *_ = self.select_summary(month, year, cat_id)
+            yield (cat_id, budget, fact)
