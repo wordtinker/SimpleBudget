@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PyQt5.QtCore import QModelIndex, Qt
-from PyQt5.QtWidgets import QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QLabel
 from ui.QBar import QBar
 
 from models import TreeModel, TreeItem
@@ -113,7 +113,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.accountsTree.hideColumn(6)
         self.accountsTree.expandAll()
 
-    def show_budget_report(self):  # TODO Scrolling
+    def show_budget_report(self):
         self.clear_bars()
 
         year = datetime.date.today().year
