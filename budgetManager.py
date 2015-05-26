@@ -9,13 +9,16 @@ from utils import build_record, Category, show_warning
 
 
 class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
+    """
+    GUI that handles creation, editing and deletion of budgets.
+    """
     def __init__(self, storage):
         super().__init__()
         self.setupUi(self)
 
         self.storage = storage
 
-        # Fetch subcategories list
+        # Fetch subcategories list  # FIXME
         subs = self.storage.select_all_subcategories()
         self.categories = dict(((rowid, Category(name, parent, rowid))
                                 for name, parent, rowid in subs))
@@ -35,6 +38,9 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         self.copyBtn.clicked.connect(self.copy_records)
 
     def set_month_and_year(self):
+        """
+        Sets initial values for year and month boxes.
+        """
         self.yearBox.addItems(YEARS)
         self.monthBox.addItems(MONTHS)
         current_date = QDate.currentDate()
@@ -42,12 +48,18 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         self.monthBox.setCurrentText(MONTHS[current_date.month()])
 
     def setup_table(self):
-        self.records = TableModel(("Amount", "Category", "Type", "On day"))
+        """
+        Initializes the table for budget records.
+        """
+        self.records = TableModel(("Amount", "Category", "Type", "On day"))  # FIXME to enums
         self.recordsView.setModel(self.records)
         self.selection = QItemSelectionModel(self.records)
         self.recordsView.setSelectionModel(self.selection)
 
     def load_budget_records(self):
+        """
+        Loads the data from DB to GUI.
+        """
         self.records.prepare()
         month = self.monthBox.currentIndex()  # by position
         year = self.yearBox.currentText()
@@ -57,6 +69,9 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
             self.records.addRow(r)
 
     def add_record(self):
+        """
+        Fires up GUI for budget record creation.
+        """
         if len(self.categories) == 0:
             show_warning('You have to create categories first.')
             return
@@ -66,6 +81,9 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         manager.exec()
 
     def edit_record(self):
+        """
+        Fires up GUI for budget record editing.
+        """
         index = self.selection.currentIndex()
         if index.isValid():
             record = index.data(role=Qt.UserRole)
@@ -74,6 +92,9 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
             manager.exec()
 
     def delete_record(self):
+        """
+        Deletes the budget record from DB and GUI.
+        """
         index = self.selection.currentIndex()
         if index.isValid():
             record = index.data(role=Qt.UserRole)
@@ -85,6 +106,9 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
 
     def record_created(self, amount, category_id, budget_type, day, year,
                        month):
+        """
+        Adds created budget record into DB and GUI.
+        """
         result = self.storage.add_record(amount, category_id, budget_type, day,
                                          year, month)
         record = build_record(result, self.categories)
@@ -92,6 +116,9 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
 
     def record_edited(self, amount, category_id, budget_type, day, year,
                       month, record_id):
+        """
+        Adds edited budget record into DB and reloads all records in the GUI.
+        """
         self.storage.update_record(amount, category_id, budget_type, day, year,
                                    month, record_id)
         self.load_budget_records()
