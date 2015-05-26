@@ -4,9 +4,19 @@ from PyQt5.QtGui import QPainter, QFont, QPen
 
 
 class QBar(QWidget):
+    """
+    Custom QWidget that draws a bar.
+    """
 
     def __init__(self, value, maximum,
                  bar_color=Qt.gray, normal_color=Qt.green, exceed_color=Qt.red):
+        """
+        :param value: current value of bar
+        :param maximum: the value of full bar
+        :param bar_color: color of unfilled bar
+        :param normal_color: bar fill color
+        :param exceed_color: bar fill color if value exceed maximum
+        """
 
         super().__init__()
 
