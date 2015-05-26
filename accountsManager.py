@@ -8,6 +8,9 @@ from utils import Account, show_warning
 
 
 class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
+    """
+    GUI that handles creation, editing and deletion of accounts.
+    """
     def __init__(self, storage):
         super().__init__()
         self.setupUi(self)
@@ -36,6 +39,9 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
             self.accounts.addItem(Account(*acc))
 
     def selection_changed(self, curr_index: QModelIndex, prev_index: QModelIndex):
+        """
+        Updates the information about currently selected account.
+        """
         if not curr_index.isValid():
             return None
 
@@ -54,6 +60,9 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         self.exTotalBox.setChecked(acc.extotal)
 
     def type_changed(self, text: str):
+        """
+        Changes the type of the account in DB and GUI.
+        """
         model_indexes = self.selection.selectedIndexes()
         if not model_indexes:
             return None
@@ -67,6 +76,9 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
             acc.type = text
 
     def closed_changed(self, state: int):
+        """
+        Changes close status of the account in DB and GUI.
+        """
         model_indexes = self.selection.selectedIndexes()
         if not model_indexes:
             return None
@@ -83,6 +95,9 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
             acc.closed = state
 
     def budget_changed(self, state: int):
+        """
+        Changes the budget status of account in DB and GUI.
+        """
         model_indexes = self.selection.selectedIndexes()
         if not model_indexes:
             return None
@@ -99,6 +114,9 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
             acc.exbudget = state
 
     def total_changed(self, state: int):
+        """
+        Changes the total status of account in DB and GUI.
+        """
         model_indexes = self.selection.selectedIndexes()
         if not model_indexes:
             return None
@@ -115,14 +133,20 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
             acc.extotal = state
 
     def add_account(self):
+        """
+        Creates account with default attributes in DB and adds it to GUI.
+        """
         name, ok = QInputDialog.getText(self, "Add new account",
-                "Enter the name of the new account:")
+                                        "Enter the name of the new account:")
 
         if ok and name:
             acc = self.storage.add_account(name)
             self.accounts.addItem(Account(*acc))
 
     def delete_account(self):
+        """
+        Tries to delete the account from DB, if successful deletes it from GUI.
+        """
         model_indexes = self.selection.selectedIndexes()
         if not model_indexes:  # the list of accounts is empty
             return None
