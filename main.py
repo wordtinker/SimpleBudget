@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
 from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtWidgets import QLabel
 from ui.QBar import QBar
@@ -105,6 +105,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.actionManageAccounts.triggered.connect(self.manage_accounts)
         self.actionManageCategories.triggered.connect(self.manage_categories)
         self.actionBudget.triggered.connect(self.manage_budget)
+        self.actionAbout.triggered.connect(self.show_about)
+        # self.actionBudgetReport.triggered.connect(self.report_budget)  # TODO
+        # self.actionBalance.triggered.connect(self.report_balance)  # TODO
 
         self.accountsTree.doubleClicked.connect(self.account_clicked)
 
@@ -291,6 +294,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.menuBar.setEnabled(True)
             # Update budget report
             self.show_budget_report()
+
+    def show_about(self):
+        message = " ".join([config.APPNAME, config.VERSION, '\n'])
+        message += "Icons are designed by Freepik."
+        QMessageBox.information(self, "About",  message)
 
     def account_clicked(self, index: QModelIndex):
         """
