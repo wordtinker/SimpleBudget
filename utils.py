@@ -2,8 +2,14 @@ from collections import namedtuple
 import decimal
 from PyQt5.Qt import QMessageBox
 
+"""
+Assorted utility functions.
+"""
 
 def show_warning(text):
+    """
+    Shows a simple warning with given text.
+    """
     msg_box = QMessageBox()
     msg_box.setText(text)
     msg_box.setStandardButtons(QMessageBox.Ok)
@@ -12,10 +18,17 @@ def show_warning(text):
 
 
 def from_cents(cents: int):
+    """
+    Converts the int number of cents to decimal using proper math for
+    currency.
+    """
     return decimal.Decimal(str(cents)) / decimal.Decimal('100')
 
 
 def to_cents(full: float):
+    """
+    Converts float currency into cents using proper math for currency.
+    """
     return int(decimal.Decimal(str(full)) * decimal.Decimal('100'))
 
 
@@ -47,6 +60,9 @@ Transaction = namedtuple(
 
 
 def build_transaction(query_result, categories):
+    """
+    Builds Transaction object given query result and categories dictionary.
+    """
     date, amount, info, category_id, rowid = query_result
     name, parent, _ = categories[category_id]
     category = parent + '::' + name
@@ -58,6 +74,9 @@ Record = namedtuple('Record', ['amount', 'category', 'type', 'day',
 
 
 def build_record(query_result, categories):
+    """
+    Builds Record object given query result and categories dictionary.
+    """
     amount, category_id, budget_type, day, year, month, rowid = query_result
     name, parent, _ = categories[category_id]
     category = parent + '::' + name
@@ -68,6 +87,12 @@ def build_record(query_result, categories):
 Category = namedtuple('Category', ['name', 'parent', 'id'])
 
 def fetch_subcategories(storage):
+    """
+    Builds dictionary of subcategories.
+    :param storage: DB object
+    :return: dic
+    """
+
     subs = storage.select_all_subcategories()
     categories = dict(((rowid, Category(name, parent, rowid))
                       for name, parent, rowid in subs))

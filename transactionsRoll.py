@@ -8,6 +8,9 @@ from utils import build_transaction, fetch_subcategories
 
 
 class TransactionsRoll(Ui_Dialog, QDialog):
+    """
+    GUI that handles the list of all transactions for given account.
+    """
     def __init__(self, storage, acc_id):
         super().__init__()
         self.setupUi(self)
@@ -29,6 +32,9 @@ class TransactionsRoll(Ui_Dialog, QDialog):
         self.show_transactions()
 
     def show_transactions(self):
+        """
+        Fetches transactions from DB and shows them.
+        """
         self.roll.prepare()
         transactions = [build_transaction(t, self.categories)
                         for t in self.storage.select_transactions(self.id)]
@@ -36,11 +42,17 @@ class TransactionsRoll(Ui_Dialog, QDialog):
             self.roll.addRow(tr)
 
     def add_transaction(self):
+        """
+        Fires up GUI for adding transaction.
+        """
         manager = Manager(self.categories.values())
         manager.createdTransaction.connect(self.transaction_created)
         manager.exec()
 
     def edit_transaction(self):
+        """
+        Fires up GUI for editing transaction.
+        """
         index = self.selection.currentIndex()
         if index.isValid():
             transaction = index.data(role=Qt.UserRole)
@@ -49,6 +61,9 @@ class TransactionsRoll(Ui_Dialog, QDialog):
             manager.exec()
 
     def delete_transaction(self):
+        """
+        Deletes transaction from DB and GUI.
+        """
         index = self.selection.currentIndex()
         if index.isValid():
             transaction = index.data(role=Qt.UserRole)
@@ -56,12 +71,19 @@ class TransactionsRoll(Ui_Dialog, QDialog):
             self.roll.removeRows(index.row(), 1)
 
     def transaction_created(self, date, amount, info, category_id):
+        """
+        Catches transaction created signal and adds transaction to DB and GUI.
+        """
         tr = self.storage.\
             add_transaction(date, amount, info, self.id, category_id)
         transaction = build_transaction(tr, self.categories)
         self.roll.addRow(transaction)
 
     def transaction_edited(self, date, amount, info, category_id, trans_id):
+        """
+        Catches transaction edited signal and updates transaction in the DB,
+        redraws all transactions in the GUI.
+        """
         self.storage.update_transaction(
             trans_id, self.id, date, amount, info, category_id)
         self.show_transactions()
