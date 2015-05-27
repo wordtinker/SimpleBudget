@@ -34,13 +34,17 @@ def update_recent(name=''):
     """
     Updates the value of most recent opened file.
     :param name: file name
-    :return:
     """
     with open(os.path.join(APP_DATA_PATH, config.RECENT), 'w') as recent:
         recent.write(name)
 
 
 def order_accounts(accounts):
+    """
+    Takes a list of accounts and turns it into dictionary with account type keys.
+    :param accounts: list of Accounts
+    :return: OrderedDict of Accounts
+    """
     account_dict = OrderedDict((i, []) for i in ACCOUNT_TYPES)
 
     for acc in accounts:
@@ -55,6 +59,10 @@ class AccountsTree(TreeModel):
         self._update_accounts()
 
     def _update_accounts(self):
+        """
+        Fetches account list from DB and builds a tree model of accounts.
+        Adds subtotal and grand total to that model.
+        """
         accounts = [Account(*a) for a in self.storage.select_accounts_summary()]
         account_dict = order_accounts(accounts)
 
@@ -104,11 +112,18 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.load_recent_file()
 
     def show_accounts(self):
+        """
+        Reloads the account model into view.
+        """
         self.accounts = AccountsTree(self.storage)
         self.accountsTree.setModel(self.accounts)
         self.accountsTree.expandAll()
 
     def show_budget_report(self):
+        """
+        Loads the budget report from DB for current month and year and puts
+        it into GUI.
+        """
         self.clear_bars()
 
         year = datetime.date.today().year
@@ -140,6 +155,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.barsLayout.setColumnStretch(1, 1)
 
     def clear_bars(self):
+        """
+        Clears the widget for budget report.
+        """
         for i in reversed(range(self.barsLayout.count())):
             widget = self.barsLayout.itemAt(i).widget()
             # Detach from layout
@@ -148,12 +166,18 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             widget.setParent(None)
 
     def add_bar(self, category, budget, fact, expectations, position):
+        """
+        Adds single bar to the budget report at selected position
+        """
         self.barsLayout.addWidget(QLabel(category), position, 0)
         bar = QBar(fact, budget)
         self.barsLayout.addWidget(bar, position, 1)
         self.barsLayout.addWidget(QLabel(expectations), position, 2)
 
     def load_recent_file(self):
+        """
+        Tries to find the most recent opened file.
+        """
         file_name = ''
         file_path = os.path.join(APP_DATA_PATH, config.RECENT)
         if os.path.exists(file_path):
@@ -164,6 +188,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.open_file(file_name)
 
     def choose_file(self):
+        """
+        Fires up user dialog letting him choose file to be opened.
+        """
         dialog = QFileDialog()
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter(config.FILE_TYPE)
@@ -172,6 +199,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.open_file(file_name)
 
     def create_file(self):
+        """
+        Fires up user dialog letting him create new file.
+        """
         file_name, _ = QFileDialog.getSaveFileName(
             self, caption='Save as...', filter=config.FILE_TYPE)
 
@@ -184,6 +214,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.open_file(file_name)
 
     def open_file(self, name):
+        """
+        Opens the DB file.
+        """
         # read dbfile and load data
         self.storage = Storage(name)
 
@@ -194,6 +227,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         update_recent(name)
 
     def close_file(self):
+        """
+        Closes the DB file and cleans up GUI.
+        """
+        # Clear the budget report
+        self.clear_bars()
         # Clear the accounts tree view
         self.accounts = None
         self.accountsTree.setModel(None)
@@ -203,6 +241,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         update_recent()
 
     def exit_action_triggered(self):
+        """
+        Exits the program.
+        """
         self.close()
 
     def manage_accounts(self):
@@ -252,6 +293,10 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.show_budget_report()
 
     def account_clicked(self, index: QModelIndex):
+        """
+        Opens the list of transactions for given index in the account
+        tree model.
+        """
         acc = index.data(role=Qt.UserRole)
         if not isinstance(acc, Account):
             return

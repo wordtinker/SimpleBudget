@@ -6,6 +6,9 @@ from utils import Category, show_warning
 
 
 class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
+    """
+    GUI that handles creation and deletion of categories.
+    """
     def __init__(self, storage):
         super().__init__()
         self.setupUi(self)
@@ -21,6 +24,9 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
         self.show_categories()
 
     def show_available_parents(self):
+        """
+        Fetches the list of categories from DB and puts them into box.
+        """
         self.categoryParent.clear()
 
         parents = self.storage.select_parents()
@@ -31,6 +37,10 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
         self.categoryParent.setCurrentText('')
 
     def show_categories(self):
+        """
+        Fetches the categories and subcategories from DB, builds tree
+        and shows it in the GUI.
+        """
         cat_model = TreeModel(('Categories', ))
         self.categoriesView.setModel(cat_model)
 
@@ -49,6 +59,10 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
         self.categoriesView.expandAll()
 
     def add_category(self):
+        """
+        Gets the name of new category and creates category or subcategory
+        in DB. On success reloads all categories in the GUI.
+        """
         name = self.caregoryName.text()
         if name == '':
             return
@@ -67,6 +81,10 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
                 self.show_available_parents()
 
     def delete_category(self):
+        """
+        Tries to delete selected category from DB. On success reloads
+        all categories in the GUI.
+        """
         index_list = self.categoriesView.selectedIndexes()
         if index_list and index_list[0].isValid():
             index = index_list[0]
