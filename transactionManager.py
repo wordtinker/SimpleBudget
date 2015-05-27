@@ -6,6 +6,9 @@ from utils import to_cents
 
 
 class Manager(Ui_manageTransaction, QDialog):
+    """
+    GUI to handle creation and editing of single transaction.
+    """
 
     # Date, amount, info, category_id
     createdTransaction = pyqtSignal(datetime.date, int, str, int)
@@ -18,6 +21,7 @@ class Manager(Ui_manageTransaction, QDialog):
 
         self.categories = categories
         self.transaction = transaction
+
         # List all categories
         self.categories_model = CategoryListModel()
         for cat in self.categories:
@@ -35,6 +39,9 @@ class Manager(Ui_manageTransaction, QDialog):
             self.dateEdit.setDate(today)
 
     def accept(self):
+        """
+        Gathers transaction params and sends signal.
+        """
         if self.is_valid():
             date = self.dateEdit.date().toPyDate()
             amount = to_cents(self.amountBox.value())

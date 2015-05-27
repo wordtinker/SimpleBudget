@@ -6,6 +6,9 @@ from utils import to_cents
 
 
 class Manager(Ui_Dialog, QDialog):
+    """
+    GUI to handle creation and editing of budget record.
+    """
 
     # amount, category_id, type, day, year, month
     createdRecord = pyqtSignal(int, int, str, int, int, int)
@@ -34,6 +37,9 @@ class Manager(Ui_Dialog, QDialog):
             self.monthBox.setCurrentIndex(today.month())
 
     def setup(self):
+        """
+        Initializes the GUI.
+        """
         # List all categories
         self.categories_model = CategoryListModel()
         for cat in self.categories:
@@ -50,6 +56,9 @@ class Manager(Ui_Dialog, QDialog):
         self.typeBox.addItems(BUDGET_TYPES)
 
     def set_day_limit(self, budget_type):
+        """
+        Changes allowed day limit depending on choosen budget type.
+        """
         if budget_type in ('Monthly', 'Daily'):
             self.dayBox.setMinimum(0)
             self.dayBox.setValue(0)
@@ -64,6 +73,9 @@ class Manager(Ui_Dialog, QDialog):
             self.dayBox.setEnabled(True)
 
     def accept(self):
+        """
+        Gathers budget record params and sends signal.
+        """
         amount = to_cents(self.budgetBox.value())
         category_id = self.categoryBox.currentData(role=Qt.UserRole).id
         account_type = self.typeBox.currentText()
