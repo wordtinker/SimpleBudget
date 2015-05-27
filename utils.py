@@ -1,10 +1,8 @@
+""" Assorted utility functions. """
 from collections import namedtuple
 import decimal
 from PyQt5.Qt import QMessageBox
 
-"""
-Assorted utility functions.
-"""
 
 def show_warning(text):
     """
