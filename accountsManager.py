@@ -4,18 +4,18 @@ from PyQt5.QtCore import QItemSelectionModel, Qt, QModelIndex
 import ui.manageAccounts
 from models import ListModel
 from enums import ACCOUNT_TYPES
-from utils import Account, show_warning
+from utils import show_warning
 
 
 class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
     """
     GUI that handles creation, editing and deletion of accounts.
     """
-    def __init__(self, storage):
+    def __init__(self, orm):
         super().__init__()
         self.setupUi(self)
 
-        self.storage = storage
+        self.orm = orm
 
         self.accounts = ListModel()
         self.accountsView.setModel(self.accounts)
@@ -35,8 +35,8 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         self.addAccountButton.clicked.connect(self.add_account)
         self.deleteAccountButton.clicked.connect(self.delete_account)
 
-        for acc in self.storage.select_accounts():
-            self.accounts.addItem(Account(*acc))
+        for acc in self.orm.fetch_accounts():
+            self.accounts.addItem(acc)
 
     def selection_changed(self, curr_index: QModelIndex, prev_index: QModelIndex):
         """
@@ -72,7 +72,7 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
 
         # Catch only changes that differ for selected account
         if acc.type != text:
-            self.storage.update_account_type(acc.id, text)
+            self.orm.update_account_type(acc, text)
             acc.type = text
 
     def closed_changed(self, state: int):
@@ -91,7 +91,7 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         # (0,1,2)//2 -> (0,0,1)
         state //= 2
         if acc.closed != state:
-            self.storage.update_account_status(acc.id, state)
+            self.orm.update_account_status(acc, state)
             acc.closed = state
 
     def budget_changed(self, state: int):
@@ -110,7 +110,7 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         # (0,1,2)//2 -> (0,0,1)
         state //= 2
         if acc.exbudget != state:
-            self.storage.update_account_budget_status(acc.id, state)
+            self.orm.update_account_budget_status(acc, state)
             acc.exbudget = state
 
     def total_changed(self, state: int):
@@ -129,7 +129,7 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         # (0,1,2)//2 -> (0,0,1)
         state //= 2
         if acc.extotal != state:
-            self.storage.update_account_total_status(acc.id, state)
+            self.orm.update_account_total_status(acc, state)
             acc.extotal = state
 
     def add_account(self):
@@ -140,8 +140,8 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
                                         "Enter the name of the new account:")
 
         if ok and name:
-            acc = self.storage.add_account(name)
-            self.accounts.addItem(Account(*acc))
+            acc = self.orm.add_account(name)
+            self.accounts.addItem(acc)
 
     def delete_account(self):
         """
@@ -161,7 +161,7 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         ret = msgBox.exec()
 
         if ret == QMessageBox.Ok:
-            deletion = self.storage.delete_account(acc.id)
+            deletion = self.orm.delete_account(acc)
             if not deletion:
                 show_warning("Can't delete account.")
             else:

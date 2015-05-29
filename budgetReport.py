@@ -3,15 +3,14 @@ from ui.budgetReport import Ui_Dialog
 from ui.QBar import QBar
 from models import TableModel
 from enums import YEARS, MONTHS
-from utils import fetch_budget_report_bars
 
 
 class BudgetReport(Ui_Dialog, QDialog):
-    def __init__(self, storage):
+    def __init__(self, orm):
         super().__init__()
         self.setupUi(self)
 
-        self.storage = storage
+        self.orm = orm
 
         self.set_month_and_year()
 
@@ -38,7 +37,7 @@ class BudgetReport(Ui_Dialog, QDialog):
         self.yearBox.setCurrentText(str(current_date.year()))
         self.monthBox.setCurrentText(MONTHS[current_date.month()])
 
-    def load_budget_bars(self):  #FIXME ORM
+    def load_budget_bars(self):
         """
         Loads the budget report from DB for chosen month and year and puts
         it into GUI.
@@ -48,7 +47,7 @@ class BudgetReport(Ui_Dialog, QDialog):
         year = int(self.yearBox.currentText())
         month = int(self.monthBox.currentIndex())  # by position
 
-        for budget_bar in fetch_budget_report_bars(self.storage, month, year):
+        for budget_bar in self.orm.fetch_budget_report_bars(month, year):
             self.add_bar(budget_bar)
 
         self.barsLayout.setColumnStretch(1, 1)
@@ -64,7 +63,7 @@ class BudgetReport(Ui_Dialog, QDialog):
             # Remove from GUI
             widget.setParent(None)
 
-    def add_bar(self, budget_bar):  # FIXME ORM
+    def add_bar(self, budget_bar):
         """
         Adds single bar to the budget report at selected position
         """
@@ -81,8 +80,7 @@ class BudgetReport(Ui_Dialog, QDialog):
 
         year = int(self.yearBox.currentText())
         month = int(self.monthBox.currentIndex())  # by position
-        budget_bar = q_bar.model
-        category_id = budget_bar.category.id
+        category = q_bar.model.category
 
-        for item in self.storage.select_transactions_for_month(month, year, category_id):
-            self.transactions.addRow(item)
+        for transaction in self.orm.fetch_transactions_for_month(month, year, category):
+            self.transactions.addRow(transaction)

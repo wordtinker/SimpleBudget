@@ -2,18 +2,18 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.Qt import Qt
 from models import TreeModel, TreeItem
 import ui.manageCategories
-from utils import Category, show_warning
+from utils import show_warning
 
 
 class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
     """
     GUI that handles creation and deletion of categories.
     """
-    def __init__(self, storage):
+    def __init__(self, orm):
         super().__init__()
         self.setupUi(self)
 
-        self.storage = storage
+        self.orm = orm
 
         # Connect signals and slots
         self.addBtn.clicked.connect(self.add_category)
@@ -29,9 +29,8 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
         """
         self.categoryParent.clear()
 
-        parents = self.storage.select_parents()
-        parents = (p for p, *_ in parents)
-        self.categoryParent.addItems(parents)
+        parents = self.orm.fetch_parents()
+        self.categoryParent.addItems([p.name for p in parents])
 
         self.categoryParent.addItem('')
         self.categoryParent.setCurrentText('')
@@ -44,14 +43,13 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
         cat_model = TreeModel(('Categories', ))
         self.categoriesView.setModel(cat_model)
 
-        categories = self.storage.select_parents()
-        categories = (Category(*c) for c in categories)
+        categories = self.orm.fetch_parents()
         for category in categories:
             item = TreeItem(category, cat_model.rootItem)
             cat_model.rootItem.appendChild(item)
 
-            subs = self.storage.select_subcategories(category.name)
-            subs = (Category(*c) for c in subs)
+            subs = self.orm.fetch_subcategories_for_parent(category)
+
             for sub in subs:
                 sub_item = TreeItem(sub, item)
                 item.appendChild(sub_item)
@@ -66,13 +64,9 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
         name = self.caregoryName.text()
         if name == '':
             return
-
         parent = self.categoryParent.currentText()
-        if parent == '':
-            addition = self.storage.add_category(name)
-        else:
-            addition = self.storage.add_subcategory(name, parent)
 
+        addition = self.orm.add_category(name, parent)
         if not addition:
             show_warning("Category already exists.")
         else:
@@ -90,11 +84,7 @@ class CategoriesManager(ui.manageCategories.Ui_Dialog, QDialog):
             index = index_list[0]
             category = index.data(Qt.UserRole)
 
-            if category.parent is not None:
-                deletion = self.storage.delete_subcategory(category.id)
-            else:
-                deletion = self.storage.delete_category(category.name)
-
+            deletion = self.orm.delete_category(category)
             if not deletion:
                 show_warning("Can't delete category")
             else:

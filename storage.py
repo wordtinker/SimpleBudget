@@ -197,14 +197,6 @@ class Storage:
         AND exbudget = 0""", (f_day, l_day, category_id))
         return db_cursor.fetchall()
 
-    def select_transactions_for_category(self, category_id):
-        db_cursor = self.db_conn.cursor()
-        db_cursor.execute("""
-        SELECT *, rowid
-        FROM Transactions
-        WHERE category_id = ?""", (category_id,))
-        return db_cursor.fetchall()
-
     def exists_transaction_for_category(self, category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""

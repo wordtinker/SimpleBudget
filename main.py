@@ -14,8 +14,7 @@ import datetime
 
 import config
 from enums import ACCOUNT_TYPES
-from utils import Account, fetch_budget_report_bars
-from storage import Storage
+from utils import Account, ORM
 from accountsManager import AccountsManager
 from categoriesManager import CategoriesManager
 from transactionsRoll import TransactionsRoll
@@ -54,9 +53,9 @@ def order_accounts(accounts):
 
 
 class AccountsTree(TreeModel):
-    def __init__(self, storage):
+    def __init__(self, orm):
         super().__init__(('Account', 'Balance'))
-        self.storage = storage
+        self.orm = orm
         self._update_accounts()
 
     def _update_accounts(self):
@@ -64,7 +63,7 @@ class AccountsTree(TreeModel):
         Fetches account list from DB and builds a tree model of accounts.
         Adds subtotal and grand total to that model.
         """
-        accounts = [Account(*a) for a in self.storage.select_accounts_summary()]
+        accounts = self.orm.fetch_accounts_summary()
         account_dict = order_accounts(accounts)
 
         for key, accs in account_dict.items():
@@ -89,7 +88,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.storage = None
+        self.orm = None
         self.accounts = None
 
         # Set up the user interface
@@ -119,11 +118,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         """
         Reloads the account model into view.
         """
-        self.accounts = AccountsTree(self.storage)
+        self.accounts = AccountsTree(self.orm)
         self.accountsTree.setModel(self.accounts)
         self.accountsTree.expandAll()
 
-    def show_budget_report(self):  # FIXME ORM
+    def show_budget_report(self):
         """
         Loads the budget report from DB for current month and year and puts
         it into GUI.
@@ -133,7 +132,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         year = datetime.date.today().year
         month = datetime.date.today().month
 
-        for budget_bar in fetch_budget_report_bars(self.storage, month, year):
+        for budget_bar in self.orm.fetch_budget_report_bars(month, year):
             self.add_bar(budget_bar)
 
         self.barsLayout.setColumnStretch(1, 1)
@@ -149,7 +148,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             # Remove from GUI
             widget.setParent(None)
 
-    def add_bar(self, budget_bar):  # FIXME ORM
+    def add_bar(self, budget_bar):
         """
         Adds single bar to the budget report at selected position
         """
@@ -205,7 +204,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         Opens the DB file.
         """
         # read dbfile and load data
-        self.storage = Storage(name)
+        self.orm = ORM(name)
 
         self.show_accounts()
         self.show_budget_report()
@@ -222,8 +221,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         # Clear the accounts tree view
         self.accounts = None
         self.accountsTree.setModel(None)
-        # Release storage
-        self.storage = None
+        # Release DB
+        self.orm = None
         # Forget recent filename
         update_recent()
 
@@ -237,9 +236,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         """
         Fires up the widget to manage accounts
         """
-        if self.storage and self.accounts:
+        if self.orm and self.accounts:
 
-            acc_manager = AccountsManager(self.storage)
+            acc_manager = AccountsManager(self.orm)
 
             self.menuBar.setEnabled(False)
 
@@ -255,8 +254,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         """
         Fires up the widget to manage accounts
         """
-        if self.storage and self.accounts:
-            cat_manager = CategoriesManager(self.storage)
+        if self.orm and self.accounts:
+            cat_manager = CategoriesManager(self.orm)
 
             self.menuBar.setEnabled(False)
 
@@ -268,8 +267,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         """
         Fires up the widget to manage budget
         """
-        if self.storage and self.accounts:
-            budget_manager = BudgetManager(self.storage)
+        if self.orm and self.accounts:
+            budget_manager = BudgetManager(self.orm)
 
             self.menuBar.setEnabled(False)
 
@@ -283,8 +282,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         """
         Fires up the widget with budget report.
         """
-        if self.storage and self.accounts:
-            report = BudgetReport(self.storage)
+        if self.orm and self.accounts:
+            report = BudgetReport(self.orm)
             self.menuBar.setEnabled(False)
             report.exec()
             self.menuBar.setEnabled(True)
@@ -299,11 +298,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         Opens the list of transactions for given index in the account
         tree model.
         """
-        acc = index.data(role=Qt.UserRole)
+        account = index.data(role=Qt.UserRole)
         if not isinstance(acc, Account):
             return
 
-        transaction_manager = TransactionsRoll(self.storage, acc.id)
+        transaction_manager = TransactionsRoll(self.orm, account)
 
         self.menuBar.setEnabled(False)
 
