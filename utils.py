@@ -84,6 +84,7 @@ def build_record(query_result, categories):
 
 Category = namedtuple('Category', ['name', 'parent', 'id'])
 
+
 def fetch_subcategories(storage):
     """
     Builds dictionary of subcategories.
@@ -98,3 +99,35 @@ def fetch_subcategories(storage):
     # Add empty category
     categories[0] = Category(' - - - ', '', 0)
     return categories
+
+BudgetBar =\
+    namedtuple('BudgetBar', ['category', 'value', 'maximum', 'expectation'])
+
+
+def fetch_budget_report_bars(storage, month, year):  # TODO ORM
+    """
+    Fetches from DB budgets and transactions for each category and turns them
+    into BuadgetBar.
+    """
+    categories = fetch_subcategories(storage)
+
+    for record in storage.get_budget_report(month, year):
+        category_id, budget, fact = record
+        budget = from_cents(budget or 0)
+        fact = from_cents(fact or 0)
+        category = categories[category_id]
+
+        if budget == 0 and fact == 0:
+            continue
+        elif budget >= 0 and fact >= 0:  # Income
+            expectation = str(max(budget - fact, 0))
+        elif budget <= 0 and fact <= 0:  # Spending
+            expectation = str(min(budget - fact, 0))
+            budget = -budget
+            fact = -fact
+        else:  # budget and fact have different signs, error
+            expectation = 'Error'
+            budget = abs(budget)
+            fact = abs(fact)
+
+        yield BudgetBar(category, fact, budget, expectation)

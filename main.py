@@ -14,12 +14,13 @@ import datetime
 
 import config
 from enums import ACCOUNT_TYPES
-from utils import Account, fetch_subcategories, from_cents
+from utils import Account, fetch_budget_report_bars
 from storage import Storage
 from accountsManager import AccountsManager
 from categoriesManager import CategoriesManager
 from transactionsRoll import TransactionsRoll
 from budgetManager import BudgetManager
+from budgetReport import BudgetReport
 
 # Define working directory for app
 if "APPDATA" in os.environ:  # We are on Windows
@@ -106,7 +107,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.actionManageCategories.triggered.connect(self.manage_categories)
         self.actionBudget.triggered.connect(self.manage_budget)
         self.actionAbout.triggered.connect(self.show_about)
-        # self.actionBudgetReport.triggered.connect(self.report_budget)  # TODO
+        self.actionBudgetReport.triggered.connect(self.report_budget)
         # self.actionBalance.triggered.connect(self.report_balance)  # TODO
 
         self.accountsTree.doubleClicked.connect(self.account_clicked)
@@ -122,7 +123,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.accountsTree.setModel(self.accounts)
         self.accountsTree.expandAll()
 
-    def show_budget_report(self):
+    def show_budget_report(self):  # FIXME ORM
         """
         Loads the budget report from DB for current month and year and puts
         it into GUI.
@@ -131,29 +132,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         year = datetime.date.today().year
         month = datetime.date.today().month
-        categories = fetch_subcategories(self.storage)
 
-        for i, record in enumerate(self.storage.get_budget_report(month, year)):
-            category_id, budget, fact = record
-            budget = from_cents(budget or 0)
-            fact = from_cents(fact or 0)
-            category = categories[category_id]
-
-            if budget == 0 and fact == 0:
-                continue
-            elif budget >= 0 and fact >= 0:  # Income
-                message = str(max(budget - fact, 0))
-            elif budget <= 0 and fact <= 0:  # Spending
-                message = str(min(budget - fact, 0))
-                budget = -budget
-                fact = -fact
-            else:  # budget and fact have different signs, error
-                message = 'Error'
-                budget = abs(budget)
-                fact = abs(fact)
-
-            self.add_bar(category.parent + '::' + category.name,
-                         budget, fact, message, i)
+        for budget_bar in fetch_budget_report_bars(self.storage, month, year):
+            self.add_bar(budget_bar)
 
         self.barsLayout.setColumnStretch(1, 1)
 
@@ -168,14 +149,17 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             # Remove from GUI
             widget.setParent(None)
 
-    def add_bar(self, category, budget, fact, expectations, position):
+    def add_bar(self, budget_bar):  # FIXME ORM
         """
         Adds single bar to the budget report at selected position
         """
-        self.barsLayout.addWidget(QLabel(category), position, 0)
-        bar = QBar(fact, budget)
+        category = budget_bar.category
+        category_text = category.parent + '::' + category.name
+        position = self.barsLayout.rowCount() + 1
+        self.barsLayout.addWidget(QLabel(category_text), position, 0)
+        bar = QBar(budget_bar)
         self.barsLayout.addWidget(bar, position, 1)
-        self.barsLayout.addWidget(QLabel(expectations), position, 2)
+        self.barsLayout.addWidget(QLabel(budget_bar.expectation), position, 2)
 
     def load_recent_file(self):
         """
@@ -294,6 +278,16 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.menuBar.setEnabled(True)
             # Update budget report
             self.show_budget_report()
+
+    def report_budget(self):
+        """
+        Fires up the widget with budget report.
+        """
+        if self.storage and self.accounts:
+            report = BudgetReport(self.storage)
+            self.menuBar.setEnabled(False)
+            report.exec()
+            self.menuBar.setEnabled(True)
 
     def show_about(self):
         message = " ".join([config.APPNAME, config.VERSION, '\n'])

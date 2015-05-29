@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QPainter, QFont, QPen
 
 
@@ -8,7 +8,9 @@ class QBar(QWidget):
     Custom QWidget that draws a bar.
     """
 
-    def __init__(self, value, maximum,
+    mousePressed = pyqtSignal(object)
+
+    def __init__(self, model,
                  bar_color=Qt.gray, normal_color=Qt.green, exceed_color=Qt.red):
         """
         :param value: current value of bar
@@ -21,8 +23,9 @@ class QBar(QWidget):
         super().__init__()
 
         self.setMinimumSize(1, 30)
-        self.value = value
-        self.max = maximum
+        self.model = model
+        self.value = model.value
+        self.max = model.maximum
         self.bar_color = bar_color
         self.normal_color = normal_color
         self.exceed_color = exceed_color
@@ -70,3 +73,6 @@ class QBar(QWidget):
         font = QFont('Serif', 7, QFont.Light)
         qp.setFont(font)
         qp.drawText(w/2, h/2, '{} / {}'.format(self.value, self.max))
+
+    def mousePressEvent(self, QMouseEvent):
+        self.mousePressed.emit(self)
