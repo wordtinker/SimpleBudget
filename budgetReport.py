@@ -80,7 +80,8 @@ class BudgetReport(Ui_Dialog, QDialog):
 
         year = int(self.yearBox.currentText())
         month = int(self.monthBox.currentIndex())  # by position
-        category = q_bar.model.category
+        category = q_bar.model.category  # FIXME err
 
-        for transaction in self.orm.fetch_transactions_for_month(month, year, category):
+        for transaction in self.orm.fetch_transactions_for_month(month, year,
+                                                                 category):
             self.transactions.addRow(transaction)

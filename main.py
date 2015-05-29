@@ -299,7 +299,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         tree model.
         """
         account = index.data(role=Qt.UserRole)
-        if not isinstance(acc, Account):
+        if not isinstance(account, Account):
             return
 
         transaction_manager = TransactionsRoll(self.orm, account)

@@ -142,11 +142,11 @@ class ORM:
         return record
 
     def update_record(self, amount, category_id, budget_type, day, year,
-                                   month, record_id):
+                                   month, record_id): # FIXME cat_id + record_id
         self.storage.update_record(amount, category_id, budget_type, day, year,
                                    month, record_id)
 
-    def fetch_budget_report_bars(self, month, year):  # TODO ORM + review
+    def fetch_budget_report_bars(self, month, year):
         """
         Fetches from DB budgets and transactions for each category and turns them
         into BuadgetBar.
@@ -185,7 +185,7 @@ class ORM:
         subs = [Category(*c) for c in subs]
         return subs
 
-    def fetch_subcategories(self, full=True):
+    def fetch_subcategories(self, full=True):  # TODO refactor into self.categories
         """
         Builds dictionary of subcategories.
         :return: dic
@@ -215,7 +215,7 @@ class ORM:
     # Transactions #
 
     def fetch_transactions_for_month(self, month, year, category):
-        categories = self.fetch_subcategories()  # TODO transit to self.categories
+        categories = self.fetch_subcategories()
         results = self.storage.select_transactions_for_month(
             month, year, category.id)
         transactions = [build_transaction(t, categories)
@@ -233,12 +233,14 @@ class ORM:
     def delete_transaction(self, transaction, account):
         self.storage.delete_transaction(transaction.id, account.id)
 
-    def add_transaction(self, date, amount, info, account, category_id):  # FIXME cat ID
+    def add_transaction(self, date, amount, info, account, category):
         categories = self.fetch_subcategories()
-        tr = self.storage.add_transaction(date, amount, info, account.id, category_id)
+        tr = self.storage.add_transaction(
+            date, amount, info, account.id, category.id)
         transaction = build_transaction(tr, categories)
         return transaction
 
-    def update_transaction(self, trans_id, account, date, amount, info, category_id): # FIXME cat ID
+    def update_transaction(self, trans_id, account, date,
+                           amount, info, category):  # FIXME trans_id
         self.storage.update_transaction(
-            trans_id, account.id, date, amount, info, category_id)
+            trans_id, account.id, date, amount, info, category.id)

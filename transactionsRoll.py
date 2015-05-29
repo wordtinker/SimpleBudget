@@ -68,19 +68,19 @@ class TransactionsRoll(Ui_Dialog, QDialog):
             self.orm.delete_transaction(transaction, self.account)
             self.roll.removeRows(index.row(), 1)
 
-    def transaction_created(self, date, amount, info, category_id):
+    def transaction_created(self, date, amount, info, category):
         """
         Catches transaction created signal and adds transaction to DB and GUI.
         """
         transaction = self.orm.add_transaction(date, amount, info, self.account,
-                                               category_id)
+                                               category)
         self.roll.addRow(transaction)
 
-    def transaction_edited(self, date, amount, info, category_id, trans_id):
+    def transaction_edited(self, date, amount, info, category, trans_id):
         """
         Catches transaction edited signal and updates transaction in the DB,
         redraws all transactions in the GUI.
         """
         self.orm.update_transaction(
-            trans_id, self.account, date, amount, info, category_id)
+            trans_id, self.account, date, amount, info, category)
         self.show_transactions()

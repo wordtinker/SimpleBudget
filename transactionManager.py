@@ -11,9 +11,9 @@ class Manager(Ui_manageTransaction, QDialog):
     """
 
     # Date, amount, info, category_id
-    createdTransaction = pyqtSignal(datetime.date, int, str, int)
+    createdTransaction = pyqtSignal(datetime.date, int, str, object)
     # Date, amount, info, category_id, transaction_id
-    editedTransaction = pyqtSignal(datetime.date, int, str, int, int)
+    editedTransaction = pyqtSignal(datetime.date, int, str, object, int)
 
     def __init__(self, categories, transaction=None):
         super().__init__()
@@ -46,12 +46,12 @@ class Manager(Ui_manageTransaction, QDialog):
             date = self.dateEdit.date().toPyDate()
             amount = to_cents(self.amountBox.value())
             info = self.infoEdit.text()
-            category_id = self.categorysBox.currentData(role=Qt.UserRole).id
+            category = self.categorysBox.currentData(role=Qt.UserRole)
             if self.transaction is None:
-                self.createdTransaction.emit(date, amount, info, category_id)
+                self.createdTransaction.emit(date, amount, info, category)
             else:
                 self.editedTransaction\
-                    .emit(date, amount, info, category_id, self.transaction.id)
+                    .emit(date, amount, info, category, self.transaction.id)
             QDialog.accept(self)
 
     def is_valid(self):
