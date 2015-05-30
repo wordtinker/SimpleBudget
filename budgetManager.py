@@ -101,20 +101,20 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
     def copy_records(self):
         pass  # TODO __FUTURE__
 
-    def record_created(self, amount, category_id, budget_type, day, year,
+    def record_created(self, amount, category, budget_type, day, year,
                        month):
         """
         Adds created budget record into DB and GUI.
         """
-        record = self.orm.add_record(amount, category_id, budget_type, day,
+        record = self.orm.add_record(amount, category, budget_type, day,
                                          year, month)
         self.records.addRow(record)
 
-    def record_edited(self, amount, category_id, budget_type, day, year,
+    def record_edited(self, amount, category, budget_type, day, year,
                       month, record_id):
         """
         Adds edited budget record into DB and reloads all records in the GUI.
         """
-        self.orm.update_record(amount, category_id, budget_type, day, year,
+        self.orm.update_record(amount, category, budget_type, day, year,
                                month, record_id)
         self.load_budget_records()

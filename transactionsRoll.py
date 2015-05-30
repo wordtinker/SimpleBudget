@@ -76,11 +76,10 @@ class TransactionsRoll(Ui_Dialog, QDialog):
                                                category)
         self.roll.addRow(transaction)
 
-    def transaction_edited(self, date, amount, info, category, trans_id):
+    def transaction_edited(self, transaction, category):
         """
         Catches transaction edited signal and updates transaction in the DB,
         redraws all transactions in the GUI.
         """
-        self.orm.update_transaction(
-            trans_id, self.account, date, amount, info, category)
+        self.orm.update_transaction(transaction, self.account, category)
         self.show_transactions()

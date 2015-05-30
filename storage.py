@@ -247,6 +247,13 @@ class Storage:
         ORDER BY name ASC""", ())
         return db_cursor.fetchall()
 
+    def select_subcategory(self, cat_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT name, parent FROM Subcategories
+        WHERE rowid = ?""", (cat_id, ))
+        return db_cursor.fetchone()
+
     def select_subcategories(self, category):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""

@@ -11,9 +11,9 @@ class Manager(Ui_Dialog, QDialog):
     """
 
     # amount, category_id, type, day, year, month
-    createdRecord = pyqtSignal(int, int, str, int, int, int)
+    createdRecord = pyqtSignal(int, object, str, int, int, int)
     # amount, category_id, type, day, year, month, record_id
-    editedRecord = pyqtSignal(int, int, str, int, int, int, int)
+    editedRecord = pyqtSignal(int, object, str, int, int, int, int)
 
     def __init__(self, categories, record=None):
         super().__init__()
@@ -77,16 +77,16 @@ class Manager(Ui_Dialog, QDialog):
         Gathers budget record params and sends signal.
         """
         amount = to_cents(self.budgetBox.value())
-        category_id = self.categoryBox.currentData(role=Qt.UserRole).id
+        category = self.categoryBox.currentData(role=Qt.UserRole)
         account_type = self.typeBox.currentText()
         on_day = self.dayBox.value()
         year = int(self.yearBox.currentText())
         month = self.monthBox.currentIndex()
 
         if self.record is None:
-            self.createdRecord.emit(amount, category_id, account_type, on_day,
+            self.createdRecord.emit(amount, category, account_type, on_day,
                                     year, month)
         else:
-            self.editedRecord.emit(amount, category_id, account_type, on_day,
-                                    year, month, self.record.id)
+            self.editedRecord.emit(amount, category, account_type, on_day,
+                                   year, month, self.record.id)
         QDialog.accept(self)
