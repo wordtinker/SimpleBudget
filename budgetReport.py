@@ -76,6 +76,9 @@ class BudgetReport(Ui_Dialog, QDialog):
         self.barsLayout.addWidget(bar, position, 1)
 
     def show_transactions(self, q_bar):
+        """
+        Show list of transactions for selected budget category.
+        """
         self.transactions.prepare()
 
         year = int(self.yearBox.currentText())

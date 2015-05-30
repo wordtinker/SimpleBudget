@@ -43,8 +43,7 @@ class ModelCore:
 
 class Account(ModelCore):
     """
-    Using separate class because we need to set attributes in the
-    accountsManager, can't use namedtuple.
+    Account model class. Attributes can be changed while editing.
     """
     _attrs = ('name', 'balance', 'type', 'closed', 'exbudget', 'extotal', 'id')
 
@@ -59,6 +58,9 @@ class Account(ModelCore):
         self.extotal = extotal
 
 class Transaction(ModelCore):
+    """
+    Transaction model class. Attributes can be changed while editing.
+    """
     _attrs = ('date', 'amount', 'info', 'category', 'id', 'category_id')
 
     def __init__(self, date, amount, info, category, trans_id, category_id):
