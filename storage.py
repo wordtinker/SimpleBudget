@@ -189,7 +189,8 @@ class Storage:
         l_day = datetime.date(year, month, lastday)
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
-        SELECT t.* FROM Transactions as t
+        SELECT t.date, t.amount, t.info, t.category_id, t.rowid
+        FROM Transactions as t
         INNER JOIN Accounts as a
         on t.acc_id = a.rowid
         WHERE date BETWEEN ? AND ?
