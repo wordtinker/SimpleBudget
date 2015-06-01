@@ -170,9 +170,15 @@ class Storage:
         return count > 0
 
     def select_summary(self, month, year, category_id):
-        _, lastday = monthrange(year, month)
-        f_day = datetime.date(year, month, 1)
-        l_day = datetime.date(year, month, lastday)
+        if month == 0:
+            _, lastday = monthrange(year, 12)
+            f_day = datetime.date(year, 1, 1)
+            l_day = datetime.date(year, 12, lastday)
+        else:
+            _, lastday = monthrange(year, month)
+            f_day = datetime.date(year, month, 1)
+            l_day = datetime.date(year, month, lastday)
+
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         SELECT sum(t.amount) FROM Transactions as t
@@ -351,10 +357,15 @@ class Storage:
 
     def select_budget(self, month, year, category_id):
         db_cursor = self.db_conn.cursor()
-        db_cursor.execute("""
-        SELECT sum(amount) FROM Budget
-        WHERE month=? AND year=? AND category_id=?""",
-                          (month, year, category_id))
+        if month == 0:
+            db_cursor.execute("""
+            SELECT sum(amount) FROM Budget
+            WHERE year=? AND category_id=?""",
+                              (year, category_id))
+        else:
+            db_cursor.execute("""
+            SELECT sum(amount) FROM Budget
+            WHERE month=? AND year=? AND category_id=?""", (month, year, category_id))
         return db_cursor.fetchone()
 
     def exists_record_for_category(self, category_id):
