@@ -24,7 +24,8 @@ FORMS    += \
     manageCategories.ui \
     manageBudget.ui \
     manageRecord.ui \
-    budgetReport.ui
+    budgetReport.ui \
+    balanceReport.ui
 
 RESOURCES += \
     iconset.qrc

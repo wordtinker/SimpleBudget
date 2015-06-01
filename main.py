@@ -20,6 +20,7 @@ from categoriesManager import CategoriesManager
 from transactionsRoll import TransactionsRoll
 from budgetManager import BudgetManager
 from budgetReport import BudgetReport
+from balanceReport import BalanceReport
 
 # Define working directory for app
 if "APPDATA" in os.environ:  # We are on Windows
@@ -107,7 +108,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.actionBudget.triggered.connect(self.manage_budget)
         self.actionAbout.triggered.connect(self.show_about)
         self.actionBudgetReport.triggered.connect(self.report_budget)
-        # self.actionBalance.triggered.connect(self.report_balance)  # TODO
+        self.actionBalance.triggered.connect(self.report_balance)
 
         self.accountsTree.doubleClicked.connect(self.account_clicked)
 
@@ -284,6 +285,16 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         """
         if self.orm and self.accounts:
             report = BudgetReport(self.orm)
+            self.menuBar.setEnabled(False)
+            report.exec()
+            self.menuBar.setEnabled(True)
+
+    def report_balance(self):
+        """
+        Fires up the widget with balance report.
+        """
+        if self.orm and self.accounts:
+            report = BalanceReport(self.orm)
             self.menuBar.setEnabled(False)
             report.exec()
             self.menuBar.setEnabled(True)

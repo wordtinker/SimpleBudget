@@ -246,6 +246,10 @@ class ORM:
 
         return transactions
 
+    def fetch_transactions_for_period(self, month, year):
+        # TODO
+        return [Transaction('2015-01-01', from_cents(-45625), '', 'Test', 123, 2)]
+
     def fetch_transactions(self, account):
         transactions = [self._build_transaction(t)
                         for t in self.storage.select_transactions(account.id)]
@@ -265,3 +269,13 @@ class ORM:
         self.storage.update_transaction(
             transaction.id, account.id, transaction.date, transaction.amount,
             transaction.info, category.id)
+
+    # Balance #
+
+    def fetch_balance_to_date(self, month, year):
+        # TODO
+        return '2014-12-31', from_cents(12345625)
+
+    def fetch_budget_prediction(self, month, year):
+        # TODO sorted by spending
+        return [('31-01-2015', from_cents(-700000), Category('Test', 'Test', 2))]

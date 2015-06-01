@@ -49,7 +49,7 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         """
         Initializes the table for budget records.
         """
-        self.records = TableModel(("Amount", "Category", "Type", "On day"))  # FIXME to enums
+        self.records = TableModel(("Amount", "Category", "Type", "On day"))
         self.recordsView.setModel(self.records)
         self.selection = QItemSelectionModel(self.records)
         self.recordsView.setSelectionModel(self.selection)

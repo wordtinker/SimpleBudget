@@ -37,7 +37,7 @@ class BudgetReport(Ui_Dialog, QDialog):
         self.yearBox.setCurrentText(str(current_date.year()))
         self.monthBox.setCurrentText(MONTHS[current_date.month()])
 
-    def load_budget_bars(self):
+    def load_budget_bars(self):  # TODO 'All year' report
         """
         Loads the budget report from DB for chosen month and year and puts
         it into GUI.
