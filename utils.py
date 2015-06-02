@@ -1,6 +1,8 @@
 """ Assorted utility functions. """
 from collections import namedtuple
 import decimal
+import datetime
+from calendar import monthrange
 from PyQt5.Qt import QMessageBox
 from storage import Storage
 
@@ -273,8 +275,15 @@ class ORM:
     # Balance #
 
     def fetch_balance_to_date(self, month, year):
-        # TODO
-        return '2014-12-31', from_cents(12345625)
+        if month in (0, 1):
+            last_day = datetime.date(year-1, 12, 31)
+        else:
+            month -= 1
+            _, lastday = monthrange(year, month)
+            last_day = datetime.date(year, month, lastday)
+
+        balance, *_ = self.storage.select_balance_till(last_day)
+        return str(last_day), from_cents(balance or 0)
 
     def fetch_budget_prediction(self, month, year):
         # TODO sorted by spending

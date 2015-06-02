@@ -160,20 +160,20 @@ class Storage:
         ORDER BY date ASC""", (acc_id,))
         return db_cursor.fetchall()
 
-    def exists_transaction(self, acc_id):
+    def select_balance_till(self, day):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
-        SELECT COUNT(*)
-        FROM Transactions
-        WHERE acc_id = ?""", (acc_id,))
-        count = db_cursor.fetchone()[0]
-        return count > 0
+        SELECT sum(t.amount) FROM Transactions as t
+        INNER JOIN Accounts as a
+        on t.acc_id = a.rowid
+        WHERE date <= ?
+        AND extotal = 0""", (day, ))
+        return db_cursor.fetchone()
 
     def select_summary(self, month, year, category_id):
         if month == 0:
-            _, lastday = monthrange(year, 12)
             f_day = datetime.date(year, 1, 1)
-            l_day = datetime.date(year, 12, lastday)
+            l_day = datetime.date(year, 12, 31)
         else:
             _, lastday = monthrange(year, month)
             f_day = datetime.date(year, month, 1)
@@ -186,14 +186,13 @@ class Storage:
         on t.acc_id = a.rowid
         WHERE date BETWEEN ? AND ?
         AND category_id=?
-        AND exbudget = 0""", (f_day, l_day, category_id))
+        AND exbudget = 0 AND extotal = 0""", (f_day, l_day, category_id))
         return db_cursor.fetchone()
 
     def select_transactions_for_month(self, month, year, category_id):
         if month == 0:
-            _, lastday = monthrange(year, 12)
             f_day = datetime.date(year, 1, 1)
-            l_day = datetime.date(year, 12, lastday)
+            l_day = datetime.date(year, 12, 31)
         else:
             _, lastday = monthrange(year, month)
             f_day = datetime.date(year, month, 1)
@@ -206,8 +205,17 @@ class Storage:
         on t.acc_id = a.rowid
         WHERE date BETWEEN ? AND ?
         AND category_id=?
-        AND exbudget = 0""", (f_day, l_day, category_id))
+        AND exbudget = 0 AND extotal = 0""", (f_day, l_day, category_id))
         return db_cursor.fetchall()
+
+    def exists_transaction(self, acc_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT COUNT(*)
+        FROM Transactions
+        WHERE acc_id = ?""", (acc_id,))
+        count = db_cursor.fetchone()[0]
+        return count > 0
 
     def exists_transaction_for_category(self, category_id):
         db_cursor = self.db_conn.cursor()

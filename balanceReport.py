@@ -41,11 +41,11 @@ class BalanceReport(Ui_Dialog, QDialog):
         year = int(self.yearBox.currentText())
         month = int(self.monthBox.currentIndex())  # by position
 
-        # Get starting balance active period -1 day
+        # Get starting balance active, period -1 day
         last_date, balance = self.orm.fetch_balance_to_date(month, year)
         self.roll.addRow((last_date, 0, balance, 'Transaction', "- - -"))
 
-        # Get transaction for the active period
+        # Get transaction for the active period  # TODO
         for transaction in self.orm.fetch_transactions_for_period(month, year):
             balance += transaction.amount
             self.roll.addRow((transaction.date, transaction.amount, balance,
