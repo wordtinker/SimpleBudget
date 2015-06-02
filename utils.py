@@ -32,6 +32,7 @@ def to_cents(full: float):
     """
     return int(decimal.Decimal(str(full)) * decimal.Decimal('100'))
 
+
 class ModelCore:
     """
     The core of QT model. Must implement [i] and len() interface.
@@ -57,6 +58,7 @@ class Account(ModelCore):
         self.closed = closed
         self.exbudget = exbudget
 
+
 class Transaction(ModelCore):
     """
     Transaction model class. Attributes can be changed while editing.
@@ -79,6 +81,7 @@ Category = namedtuple('Category', ['name', 'parent', 'id'])
 BudgetBar =\
     namedtuple('BudgetBar', ['category', 'value', 'maximum', 'expectation'])
 Prediction = namedtuple('Prediction', ['date', 'amount', 'category'])
+
 
 class ORM:
     NO_CATEGORY = {
@@ -137,6 +140,13 @@ class ORM:
         records = [self._build_record(r) for r in records]
         return records
 
+    def fetch_budget_for_month(self, month, year, category):
+        if month == 0:
+            budget, *_ = self.storage.select_budget_for_year(year, category.id)
+        else:
+            budget, *_ = self.storage.select_budget(month, year, category.id)
+        return from_cents(budget or 0)
+
     def delete_record(self, record):
         self.storage.delete_record(record.id)
 
@@ -147,7 +157,7 @@ class ORM:
         return record
 
     def update_record(self, amount, category, budget_type, day, year,
-                                   month, record_id):
+                      month, record_id):
         self.storage.update_record(amount, category.id, budget_type, day, year,
                                    month, record_id)
 
@@ -157,22 +167,9 @@ class ORM:
         them into BudgetBar.
         """
         subcategories = self.fetch_subcategories()
-        for category_id, category in subcategories.items():
-            if month == 0:
-                f_day = datetime.date(year, 1, 1)
-                l_day = datetime.date(year, 12, 31)
-                budget, *_ = self.storage.select_budget_for_year(
-                    year, category_id)
-            else:
-                _, lastday = monthrange(year, month)
-                f_day = datetime.date(year, month, 1)
-                l_day = datetime.date(year, month, lastday)
-                budget, *_ = self.storage.select_budget(
-                    month, year, category_id)
-            fact, *_ = self.storage.select_summary(f_day, l_day, category_id)
-
-            budget = from_cents(budget or 0)
-            fact = from_cents(fact or 0)
+        for category in subcategories.values():
+            budget = self.fetch_budget_for_month(month, year, category)
+            fact = self.fetch_summary_for_month(month, year, category)
 
             if budget == 0 and fact == 0:
                 continue
@@ -189,7 +186,7 @@ class ORM:
 
             yield BudgetBar(category, fact, budget, str(expectation))
 
-    def fetch_budget_prediction(self, month, year, last_date):
+    def fetch_budget_prediction(self, month, year, transaction_date):
         if month == 0:
             month_range = range(1, 13)
         else:
@@ -198,39 +195,7 @@ class ORM:
         for mnth in month_range:
             budget_records = self.fetch_records(mnth, year)
             for record in budget_records:
-                yield from self._predict(record, last_date)
-
-    def _predict(self, record, last_date):
-        category = self.fetch_subcategory(record.category_id)
-        if record.type == 'Monthly':  # FIXME enum
-            # for tr in self.fetch_transactions_for_month(record.month, record.year, category):  # TODO
-                print(tr)
-        elif record.type == 'Point':
-            pass
-        print(record)
-            # TODO budget type!!!
-            # This part assumes budget type Monthly
-
-            # _, lastday = monthrange(year, month)
-            # last_day = datetime.date(year, month, lastday)
-            # for record in self.storage.get_budget_report(month, year):
-            #     category_id, budget, fact = record
-            #     budget = from_cents(budget or 0)
-            #     fact = from_cents(fact or 0)
-            #     category = self.fetch_subcategory(category_id)
-            #
-            #     if budget == 0:
-            #         continue
-            #     elif budget > 0 and fact >= 0:  # Income
-            #         expectation = max(budget - fact, 0)
-            #     elif budget < 0 and fact <= 0:  # Spending
-            #         expectation = min(budget - fact, 0)
-            #     else:  # budget and fact have different signs, error
-            #         # Stick to the plan
-            #         expectation = budget
-            #
-            #     yield Prediction(str(last_day), expectation, category)
-        yield Prediction(str('2015-12-31'), -70000, record.category)
+                yield self._predict(record, transaction_date)
 
     # Categories #
 
@@ -292,7 +257,8 @@ class ORM:
         category = self.fetch_subcategory(category_id)
         category_name = category.parent + '::' + category.name
         amount = from_cents(amount)
-        return Transaction(date, amount, info, category_name, rowid, category_id)
+        return Transaction(date, amount, info, category_name,
+                           rowid, category_id)
 
     def fetch_transactions_for_month(self, month, year, category):
         if month == 0:
@@ -308,6 +274,18 @@ class ORM:
         transactions = [self._build_transaction(t) for t in results]
 
         return transactions
+
+    def fetch_summary_for_month(self, month, year, category: Category):
+        if month == 0:
+            f_day = datetime.date(year, 1, 1)
+            l_day = datetime.date(year, 12, 31)
+        else:
+            _, lastday = monthrange(year, month)
+            f_day = datetime.date(year, month, 1)
+            l_day = datetime.date(year, month, lastday)
+
+        total, *_ = self.storage.select_summary(f_day, l_day, category.id)
+        return from_cents(total or 0)
 
     def fetch_transactions_for_period(self, month, year):
         if month == 0:
@@ -353,3 +331,36 @@ class ORM:
         self.storage.update_transaction(
             transaction.id, account.id, transaction.date, transaction.amount,
             transaction.info, category.id)
+
+    # Predictors
+
+    def _predict(self, record: Record, transaction_date):
+        funcs = {
+            'Monthly': self._monthly_predictor,
+            'Point': self._point_predictor
+            # 'Daily':   # TODO
+            # 'Weekly':  # TODO
+        }
+
+        return funcs[record.type](record, transaction_date)
+
+    def _monthly_predictor(self, record, transaction_date):
+        category = self.fetch_subcategory(record.category_id)
+        _, lastday = monthrange(record.year, record.month)
+        last_day = datetime.date(record.year, record.month, lastday)
+        budget = record.amount
+        fact = self.fetch_summary_for_month(record.month, record.year, category)
+
+        if budget == 0:
+            return None
+        elif budget > 0 and fact >= 0:  # Income
+            expectation = max(budget - fact, 0)
+        elif budget < 0 and fact <= 0:  # Spending
+            expectation = min(budget - fact, 0)
+        else:  # budget and fact have different signs, error
+            # Stick to the plan
+            expectation = budget
+        return Prediction(str(last_day), expectation, category)
+
+    def _point_predictor(self, record, transaction_date):
+        pass  # TODO depends on last_date
