@@ -6,6 +6,6 @@
 ::CALL pyuic5 -o manageCategories.py manageCategories.ui
 ::CALL pyuic5 -o manageBudget.py manageBudget.ui
 ::CALL pyuic5 -o manageRecord.py manageRecord.ui
-::CALL pyuic5 -o budgetReport.py budgetReport.ui
-CALL pyuic5 -o balanceReport.py balanceReport.ui
+CALL pyuic5 -o budgetReport.py budgetReport.ui
+::CALL pyuic5 -o balanceReport.py balanceReport.ui
 pause

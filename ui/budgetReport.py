@@ -44,6 +44,8 @@ class Ui_Dialog(object):
         self.barsLayout = QtWidgets.QGridLayout()
         self.barsLayout.setObjectName("barsLayout")
         self.verticalLayout_2.addLayout(self.barsLayout)
+        spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_2.addItem(spacerItem2)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
         self.verticalLayout.addWidget(self.scrollArea)
         self.transactionsView = QtWidgets.QTableView(Dialog)

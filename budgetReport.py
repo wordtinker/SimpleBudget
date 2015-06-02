@@ -75,7 +75,7 @@ class BudgetReport(Ui_Dialog, QDialog):
         bar.mousePressed.connect(self.show_transactions)
         self.barsLayout.addWidget(bar, position, 1)
 
-    def show_transactions(self, q_bar):  # FIXME month = 0
+    def show_transactions(self, q_bar):
         """
         Show list of transactions for selected budget category.
         """
