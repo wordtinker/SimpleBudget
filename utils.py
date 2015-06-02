@@ -80,7 +80,7 @@ Category = namedtuple('Category', ['name', 'parent', 'id'])
 
 BudgetBar =\
     namedtuple('BudgetBar', ['category', 'value', 'maximum', 'expectation'])
-
+Prediction = namedtuple('Prediction', ['date', 'amount', 'category'])
 
 class ORM:
     NO_CATEGORY = {
@@ -167,7 +167,7 @@ class ORM:
             if budget == 0 and fact == 0:
                 continue
             elif budget >= 0 and fact >= 0:  # Income
-                expectation = str(max(budget - fact, 0))
+                expectation = str(max(budget - fact, 0))  # FIXME why str?
             elif budget <= 0 and fact <= 0:  # Spending
                 expectation = str(min(budget - fact, 0))
                 budget = -budget
@@ -178,6 +178,33 @@ class ORM:
                 fact = abs(fact)
 
             yield BudgetBar(category, fact, budget, expectation)
+
+    def fetch_budget_prediction(self, month, year, today):
+        # TODO budget type!!!
+        # This part assumes budget type Monthly
+        if month == 0:
+            for new_month in range(1, 13):
+                pass  # TODO depends on today
+        else:
+            _, lastday = monthrange(year, month)
+            last_day = datetime.date(year, month, lastday)
+            for record in self.storage.get_budget_report(month, year):
+                category_id, budget, fact = record
+                budget = from_cents(budget or 0)
+                fact = from_cents(fact or 0)
+                category = self.fetch_subcategory(category_id)
+
+                if budget == 0:
+                    continue
+                elif budget > 0 and fact >= 0:  # Income
+                    expectation = max(budget - fact, 0)
+                elif budget < 0 and fact <= 0:  # Spending
+                    expectation = min(budget - fact, 0)
+                else:  # budget and fact have different signs, error
+                    # Stick to the plan
+                    expectation = budget
+
+                yield Prediction(str(last_day), expectation, category)
 
     # Categories #
 
@@ -292,9 +319,3 @@ class ORM:
         self.storage.update_transaction(
             transaction.id, account.id, transaction.date, transaction.amount,
             transaction.info, category.id)
-
-    # Balance report#
-
-    def fetch_budget_prediction(self, month, year):
-        # TODO sorted by spending
-        return [('31-01-2015', from_cents(-700000), Category('Test', 'Test', 2))]

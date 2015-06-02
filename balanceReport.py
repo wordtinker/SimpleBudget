@@ -56,7 +56,7 @@ class BalanceReport(Ui_Dialog, QDialog):
 
         # Get budget spendings/incoms after active period  # TODO
         for prediction in self.orm.fetch_budget_prediction(month, year):
-            date, amount, category = prediction
-            balance += amount
-            self.roll.addRow((date, amount, balance,
+            category = prediction.category
+            balance += prediction.amount
+            self.roll.addRow((prediction.date, prediction.amount, balance,
                               'Budget', category.parent+"::"+category.name))
