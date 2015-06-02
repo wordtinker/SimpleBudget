@@ -135,8 +135,11 @@ class ORM:
                       rowid, category_id)
 
     def fetch_records(self, month, year):
-        records = [self._build_record(r)
-                   for r in self.storage.select_records(month, year)]
+        if month == 0:
+            records = self.storage.select_records_for_year(year)
+        else:
+            records = self.storage.select_records(month, year)
+        records = [self._build_record(r) for r in records]
         return records
 
     def delete_record(self, record):
@@ -167,9 +170,9 @@ class ORM:
             if budget == 0 and fact == 0:
                 continue
             elif budget >= 0 and fact >= 0:  # Income
-                expectation = str(max(budget - fact, 0))  # FIXME why str?
+                expectation = max(budget - fact, 0)
             elif budget <= 0 and fact <= 0:  # Spending
-                expectation = str(min(budget - fact, 0))
+                expectation = min(budget - fact, 0)
                 budget = -budget
                 fact = -fact
             else:  # budget and fact have different signs, error
@@ -177,7 +180,7 @@ class ORM:
                 budget = abs(budget)
                 fact = abs(fact)
 
-            yield BudgetBar(category, fact, budget, expectation)
+            yield BudgetBar(category, fact, budget, str(expectation))
 
     def fetch_budget_prediction(self, month, year, today):
         # TODO budget type!!!
@@ -269,8 +272,16 @@ class ORM:
         return Transaction(date, amount, info, category_name, rowid, category_id)
 
     def fetch_transactions_for_month(self, month, year, category):
-        results = self.storage.select_transactions_for_month(
-            month, year, category.id)
+        if month == 0:
+            f_day = datetime.date(year, 1, 1)
+            l_day = datetime.date(year, 12, 31)
+        else:
+            _, lastday = monthrange(year, month)
+            f_day = datetime.date(year, month, 1)
+            l_day = datetime.date(year, month, lastday)
+
+        results = self.storage.select_budget_transactions_for_category(
+            f_day, l_day, category.id)
         transactions = [self._build_transaction(t) for t in results]
 
         return transactions

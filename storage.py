@@ -189,14 +189,8 @@ class Storage:
         AND exbudget = 0 AND extotal = 0""", (f_day, l_day, category_id))
         return db_cursor.fetchone()
 
-    def select_transactions_for_month(self, month, year, category_id):
-        if month == 0:
-            f_day = datetime.date(year, 1, 1)
-            l_day = datetime.date(year, 12, 31)
-        else:
-            _, lastday = monthrange(year, month)
-            f_day = datetime.date(year, month, 1)
-            l_day = datetime.date(year, month, lastday)
+    def select_budget_transactions_for_category(
+            self, from_date, till_date, category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         SELECT t.date, t.amount, t.info, t.category_id, t.rowid
@@ -205,7 +199,7 @@ class Storage:
         on t.acc_id = a.rowid
         WHERE date BETWEEN ? AND ?
         AND category_id=?
-        AND exbudget = 0 AND extotal = 0""", (f_day, l_day, category_id))
+        AND exbudget = 0 AND extotal = 0""", (from_date, till_date, category_id))
         return db_cursor.fetchall()
 
     def select_transactions_for_period(self, from_date, till_date):
@@ -367,16 +361,18 @@ class Storage:
 
     def select_records(self, month, year):
         db_cursor = self.db_conn.cursor()
-        if month == 0:
-            db_cursor.execute("""
-            SELECT *, rowid
-            FROM Budget
-            WHERE year=?""", (year,))
-        else:
-            db_cursor.execute("""
-            SELECT *, rowid
-            FROM Budget
-            WHERE month=? AND year=?""", (month, year))
+        db_cursor.execute("""
+        SELECT *, rowid
+        FROM Budget
+        WHERE month=? AND year=?""", (month, year))
+        return db_cursor.fetchall()
+
+    def select_records_for_year(self, year):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT *, rowid
+        FROM Budget
+        WHERE year=?""", (year,))
         return db_cursor.fetchall()
 
     def select_budget(self, month, year, category_id):
@@ -430,7 +426,7 @@ class Storage:
         """, (rowid, ))
         self.db_conn.commit()
 
-    def get_budget_report(self, month, year):
+    def get_budget_report(self, month, year):  # FIXME month
         subcategories =\
             [cat_id for *_, cat_id in self.select_all_subcategories()]
         subcategories.append(0)  # Include no category id
