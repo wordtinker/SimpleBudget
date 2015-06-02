@@ -194,32 +194,48 @@ class ORM:
 
             yield BudgetBar(category, fact, budget, str(expectation))
 
-    def fetch_budget_prediction(self, month, year, today):
-        # TODO budget type!!!
-        # This part assumes budget type Monthly
+    def fetch_budget_prediction(self, month, year, last_date):
         if month == 0:
-            for new_month in range(1, 13):
-                pass  # TODO depends on today
+            month_range = range(1, 13)
         else:
-            _, lastday = monthrange(year, month)
-            last_day = datetime.date(year, month, lastday)
-            for record in self.storage.get_budget_report(month, year):
-                category_id, budget, fact = record
-                budget = from_cents(budget or 0)
-                fact = from_cents(fact or 0)
-                category = self.fetch_subcategory(category_id)
+            month_range = range(month, month + 1)
 
-                if budget == 0:
-                    continue
-                elif budget > 0 and fact >= 0:  # Income
-                    expectation = max(budget - fact, 0)
-                elif budget < 0 and fact <= 0:  # Spending
-                    expectation = min(budget - fact, 0)
-                else:  # budget and fact have different signs, error
-                    # Stick to the plan
-                    expectation = budget
+        for mnth in month_range:
+            budget_records = self.fetch_records(mnth, year)
+            for record in budget_records:
+                yield from self._predict(record, last_date)
 
-                yield Prediction(str(last_day), expectation, category)
+    def _predict(self, record, last_date):
+        category = self.fetch_subcategory(record.category_id)
+        if record.type == 'Monthly':  # FIXME enum
+            # for tr in self.fetch_transactions_for_month(record.month, record.year, category):  # TODO
+                print(tr)
+        elif record.type == 'Point':
+            pass
+        print(record)
+            # TODO budget type!!!
+            # This part assumes budget type Monthly
+
+            # _, lastday = monthrange(year, month)
+            # last_day = datetime.date(year, month, lastday)
+            # for record in self.storage.get_budget_report(month, year):
+            #     category_id, budget, fact = record
+            #     budget = from_cents(budget or 0)
+            #     fact = from_cents(fact or 0)
+            #     category = self.fetch_subcategory(category_id)
+            #
+            #     if budget == 0:
+            #         continue
+            #     elif budget > 0 and fact >= 0:  # Income
+            #         expectation = max(budget - fact, 0)
+            #     elif budget < 0 and fact <= 0:  # Spending
+            #         expectation = min(budget - fact, 0)
+            #     else:  # budget and fact have different signs, error
+            #         # Stick to the plan
+            #         expectation = budget
+            #
+            #     yield Prediction(str(last_day), expectation, category)
+        yield Prediction(str('2015-12-31'), -70000, record.category)
 
     # Categories #
 
