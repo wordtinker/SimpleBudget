@@ -47,17 +47,15 @@ class Account(ModelCore):
     """
     Account model class. Attributes can be changed while editing.
     """
-    _attrs = ('name', 'balance', 'type', 'closed', 'exbudget', 'extotal', 'id')
+    _attrs = ('name', 'balance', 'type', 'closed', 'exbudget', 'id')
 
-    def __init__(self, name, acc_type, balance, closed, exbudget, extotal,
-                 acc_id):
+    def __init__(self, name, acc_type, balance, closed, exbudget, acc_id):
         self.id = acc_id
         self.type = acc_type
         self.name = name
         self.balance = from_cents(balance)
         self.closed = closed
         self.exbudget = exbudget
-        self.extotal = extotal
 
 class Transaction(ModelCore):
     """
@@ -110,9 +108,6 @@ class ORM:
 
     def update_account_budget_status(self, account, state):
         self.storage.update_account_budget_status(account.id, state)
-
-    def update_account_total_status(self, account, state):
-        self.storage.update_account_total_status(account.id, state)
 
     def add_account(self, name):
         acc = self.storage.add_account(name)

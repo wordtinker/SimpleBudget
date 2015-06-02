@@ -103,13 +103,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="exTotalBox">
-       <property name="text">
-        <string>eclude from grand total</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>

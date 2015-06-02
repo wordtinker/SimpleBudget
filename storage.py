@@ -15,8 +15,7 @@ class Storage:
         type TEXT,
         balance INTEGER,
         closed INTEGER,
-        exbudget INTEGER,
-        extotal INTEGER)""")
+        exbudget INTEGER)""")
         self.db_conn.commit()
 
         self.db_cursor.execute("""
@@ -95,21 +94,12 @@ class Storage:
         """, (value, acc_id))
         self.db_conn.commit()
 
-    def update_account_total_status(self, acc_id, value):
-        db_cursor = self.db_conn.cursor()
-        db_cursor.execute("""
-        UPDATE Accounts
-        SET extotal=?
-        WHERE rowid=?
-        """, (value, acc_id))
-        self.db_conn.commit()
-
     def add_account(self, acc_name):
-        acc = (acc_name, ACCOUNT_TYPES[0], 0, 0, 0, 0)
+        acc = (acc_name, ACCOUNT_TYPES[0], 0, 0, 0)
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         INSERT INTO Accounts
-        VALUES(?, ?, ?, ?, ?, ?)
+        VALUES(?, ?, ?, ?, ?)
         """, acc)
         self.db_conn.commit()
         rowid = db_cursor.lastrowid
@@ -157,14 +147,18 @@ class Storage:
         ORDER BY date ASC""", (acc_id,))
         return db_cursor.fetchall()
 
-    def select_balance_till(self, day):
+    def select_balance_till(self, to_date):
+        """
+        Returns the balance of all accounts combined, excluding non-budget
+        accounts, up to and including given date.
+        """
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         SELECT sum(t.amount) FROM Transactions as t
         INNER JOIN Accounts as a
         on t.acc_id = a.rowid
         WHERE date <= ?
-        AND extotal = 0""", (day, ))
+        AND exbudget = 0""", (to_date, ))
         return db_cursor.fetchone()
 
     def select_summary(self, from_date, to_date, category_id):
@@ -175,7 +169,7 @@ class Storage:
         on t.acc_id = a.rowid
         WHERE date BETWEEN ? AND ?
         AND category_id=?
-        AND exbudget = 0 AND extotal = 0""", (from_date, to_date, category_id))
+        AND exbudget = 0""", (from_date, to_date, category_id))
         return db_cursor.fetchone()
 
     def select_budget_transactions_for_category(
@@ -188,8 +182,7 @@ class Storage:
         on t.acc_id = a.rowid
         WHERE date BETWEEN ? AND ?
         AND category_id=?
-        AND exbudget = 0 AND extotal = 0""",
-                          (from_date, till_date, category_id))
+        AND exbudget = 0""", (from_date, till_date, category_id))
         return db_cursor.fetchall()
 
     def select_transactions_for_period(self, from_date, till_date):
@@ -200,7 +193,7 @@ class Storage:
         INNER JOIN Accounts as a
         on t.acc_id = a.rowid
         WHERE date BETWEEN ? AND ?
-        AND extotal = 0""", (from_date, till_date))
+        AND exbudget = 0""", (from_date, till_date))
         return db_cursor.fetchall()
 
     def exists_transaction(self, acc_id):

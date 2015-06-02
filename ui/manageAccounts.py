@@ -51,9 +51,6 @@ class Ui_Dialog(object):
         self.exBudgetBox = QtWidgets.QCheckBox(Dialog)
         self.exBudgetBox.setObjectName("exBudgetBox")
         self.verticalLayout.addWidget(self.exBudgetBox)
-        self.exTotalBox = QtWidgets.QCheckBox(Dialog)
-        self.exTotalBox.setObjectName("exTotalBox")
-        self.verticalLayout.addWidget(self.exTotalBox)
         spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem2)
         self.horizontalLayout_4.addLayout(self.verticalLayout)
@@ -70,5 +67,4 @@ class Ui_Dialog(object):
         self.label.setText(_translate("Dialog", "Type"))
         self.closedBox.setText(_translate("Dialog", "closed"))
         self.exBudgetBox.setText(_translate("Dialog", "exclude from budget"))
-        self.exTotalBox.setText(_translate("Dialog", "eclude from grand total"))
 

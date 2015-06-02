@@ -75,12 +75,12 @@ class AccountsTree(TreeModel):
                 item.appendChild(acc_item)
             # Add type total
             if len(accs) > 1:
-                sub_balance = sum(acc.balance for acc in accs if not acc.extotal)
+                sub_balance = sum(acc.balance for acc in accs if not acc.exbudget)
                 subtotal = TreeItem(('Total', sub_balance), item)
                 item.appendChild(subtotal)
 
         # Add grand total
-        total_balance = sum([acc.balance for acc in accounts if not acc.extotal])
+        total_balance = sum([acc.balance for acc in accounts if not acc.exbudget])
         total = TreeItem(('Grand Total', total_balance), self.rootItem)
         self.rootItem.appendChild(total)
 

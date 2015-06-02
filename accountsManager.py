@@ -30,7 +30,6 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
 
         self.closedBox.stateChanged.connect(self.closed_changed)
         self.exBudgetBox.stateChanged.connect(self.budget_changed)
-        self.exTotalBox.stateChanged.connect(self.total_changed)
 
         self.addAccountButton.clicked.connect(self.add_account)
         self.deleteAccountButton.clicked.connect(self.delete_account)
@@ -57,7 +56,6 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         # Set the checkboxes
         self.closedBox.setChecked(acc.closed)
         self.exBudgetBox.setChecked(acc.exbudget)
-        self.exTotalBox.setChecked(acc.extotal)
 
     def type_changed(self, text: str):
         """
@@ -112,25 +110,6 @@ class AccountsManager(ui.manageAccounts.Ui_Dialog, QDialog):
         if acc.exbudget != state:
             self.orm.update_account_budget_status(acc, state)
             acc.exbudget = state
-
-    def total_changed(self, state: int):
-        """
-        Changes the total status of account in DB and GUI.
-        """
-        model_indexes = self.selection.selectedIndexes()
-        if not model_indexes:
-            return None
-
-        model_index = model_indexes[0]
-        acc = model_index.data(role=Qt.UserRole)
-
-        # Catch only changes that differ for selected account
-        # acc states in (0,1); Qt.CheckState in (0,1,2)
-        # (0,1,2)//2 -> (0,0,1)
-        state //= 2
-        if acc.extotal != state:
-            self.orm.update_account_total_status(acc, state)
-            acc.extotal = state
 
     def add_account(self):
         """
