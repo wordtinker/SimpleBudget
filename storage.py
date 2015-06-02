@@ -208,6 +208,17 @@ class Storage:
         AND exbudget = 0 AND extotal = 0""", (f_day, l_day, category_id))
         return db_cursor.fetchall()
 
+    def select_transactions_for_period(self, from_date, till_date):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT t.date, t.amount, t.info, t.category_id, t.rowid
+        FROM Transactions as t
+        INNER JOIN Accounts as a
+        on t.acc_id = a.rowid
+        WHERE date BETWEEN ? AND ?
+        AND extotal = 0""", (from_date, till_date))
+        return db_cursor.fetchall()
+
     def exists_transaction(self, acc_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""

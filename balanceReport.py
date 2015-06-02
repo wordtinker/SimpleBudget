@@ -36,6 +36,9 @@ class BalanceReport(Ui_Dialog, QDialog):
         self.monthBox.setCurrentText(MONTHS[current_date.month()])
 
     def load_balance(self):
+        """
+        Fetches info from ORM and puts it into balance report.
+        """
         self.roll.prepare()
 
         year = int(self.yearBox.currentText())
@@ -45,13 +48,13 @@ class BalanceReport(Ui_Dialog, QDialog):
         last_date, balance = self.orm.fetch_balance_to_date(month, year)
         self.roll.addRow((last_date, 0, balance, 'Transaction', "- - -"))
 
-        # Get transaction for the active period  # TODO
+        # Get transaction for the active period
         for transaction in self.orm.fetch_transactions_for_period(month, year):
             balance += transaction.amount
             self.roll.addRow((transaction.date, transaction.amount, balance,
                               'Transaction', transaction.category))
 
-        # Get budget spendings/incoms after active period
+        # Get budget spendings/incoms after active period  # TODO
         for prediction in self.orm.fetch_budget_prediction(month, year):
             date, amount, category = prediction
             balance += amount

@@ -249,14 +249,35 @@ class ORM:
         return transactions
 
     def fetch_transactions_for_period(self, month, year):
-        # TODO
-        return [Transaction('2015-01-01', from_cents(-45625), '', 'Test', 123, 2)]
+        if month == 0:
+            first_day = datetime.date(year, 1, 1)
+            last_day = datetime.date(year, 12, 31)
+        else:
+            _, lastday = monthrange(year, month)
+            first_day = datetime.date(year, month, 1)
+            last_day = datetime.date(year, month, lastday)
+
+        transactions = [self._build_transaction(t)
+                        for t in self.storage.select_transactions_for_period(
+                        first_day, last_day)]
+        return transactions
 
     def fetch_transactions(self, account):
         transactions = [self._build_transaction(t)
                         for t in self.storage.select_transactions(account.id)]
 
         return transactions
+
+    def fetch_balance_to_date(self, month, year):
+        if month in (0, 1):
+            last_day = datetime.date(year-1, 12, 31)
+        else:
+            month -= 1
+            _, lastday = monthrange(year, month)
+            last_day = datetime.date(year, month, lastday)
+
+        balance, *_ = self.storage.select_balance_till(last_day)
+        return str(last_day), from_cents(balance or 0)
 
     def delete_transaction(self, transaction, account):
         self.storage.delete_transaction(transaction.id, account.id)
@@ -272,18 +293,7 @@ class ORM:
             transaction.id, account.id, transaction.date, transaction.amount,
             transaction.info, category.id)
 
-    # Balance #
-
-    def fetch_balance_to_date(self, month, year):
-        if month in (0, 1):
-            last_day = datetime.date(year-1, 12, 31)
-        else:
-            month -= 1
-            _, lastday = monthrange(year, month)
-            last_day = datetime.date(year, month, lastday)
-
-        balance, *_ = self.storage.select_balance_till(last_day)
-        return str(last_day), from_cents(balance or 0)
+    # Balance report#
 
     def fetch_budget_prediction(self, month, year):
         # TODO sorted by spending
