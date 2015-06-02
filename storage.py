@@ -1,7 +1,4 @@
 import sqlite3
-import datetime
-from calendar import monthrange
-
 from enums import ACCOUNT_TYPES
 
 
@@ -170,15 +167,7 @@ class Storage:
         AND extotal = 0""", (day, ))
         return db_cursor.fetchone()
 
-    def select_summary(self, month, year, category_id):
-        if month == 0:
-            f_day = datetime.date(year, 1, 1)
-            l_day = datetime.date(year, 12, 31)
-        else:
-            _, lastday = monthrange(year, month)
-            f_day = datetime.date(year, month, 1)
-            l_day = datetime.date(year, month, lastday)
-
+    def select_summary(self, from_date, to_date, category_id):
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""
         SELECT sum(t.amount) FROM Transactions as t
@@ -186,7 +175,7 @@ class Storage:
         on t.acc_id = a.rowid
         WHERE date BETWEEN ? AND ?
         AND category_id=?
-        AND exbudget = 0 AND extotal = 0""", (f_day, l_day, category_id))
+        AND exbudget = 0 AND extotal = 0""", (from_date, to_date, category_id))
         return db_cursor.fetchone()
 
     def select_budget_transactions_for_category(
@@ -199,7 +188,8 @@ class Storage:
         on t.acc_id = a.rowid
         WHERE date BETWEEN ? AND ?
         AND category_id=?
-        AND exbudget = 0 AND extotal = 0""", (from_date, till_date, category_id))
+        AND exbudget = 0 AND extotal = 0""",
+                          (from_date, till_date, category_id))
         return db_cursor.fetchall()
 
     def select_transactions_for_period(self, from_date, till_date):
@@ -377,16 +367,17 @@ class Storage:
 
     def select_budget(self, month, year, category_id):
         db_cursor = self.db_conn.cursor()
-        if month == 0:
-            db_cursor.execute("""
-            SELECT sum(amount) FROM Budget
-            WHERE year=? AND category_id=?""",
-                              (year, category_id))
-        else:
-            db_cursor.execute("""
-            SELECT sum(amount) FROM Budget
-            WHERE month=? AND year=? AND category_id=?""",
-                              (month, year, category_id))
+        db_cursor.execute("""
+        SELECT sum(amount) FROM Budget
+        WHERE month=? AND year=? AND category_id=?""",
+                          (month, year, category_id))
+        return db_cursor.fetchone()
+
+    def select_budget_for_year(self, year, category_id):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT sum(amount) FROM Budget
+        WHERE year=? AND category_id=?""", (year, category_id))
         return db_cursor.fetchone()
 
     def exists_record_for_category(self, category_id):
@@ -425,13 +416,3 @@ class Storage:
         WHERE rowid=?
         """, (rowid, ))
         self.db_conn.commit()
-
-    def get_budget_report(self, month, year):  # FIXME month
-        subcategories =\
-            [cat_id for *_, cat_id in self.select_all_subcategories()]
-        subcategories.append(0)  # Include no category id
-
-        for cat_id in subcategories:
-            budget, *_ = self.select_budget(month, year, cat_id)
-            fact, *_ = self.select_summary(month, year, cat_id)
-            yield (cat_id, budget, fact)

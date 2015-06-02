@@ -158,14 +158,26 @@ class ORM:
 
     def fetch_budget_report_bars(self, month, year):
         """
-        Fetches from DB budgets and transactions for each category and turns them
-        into BuadgetBar.
+        Fetches from DB budgets and transactions for each category and turns
+        them into BudgetBar.
         """
-        for record in self.storage.get_budget_report(month, year):
-            category_id, budget, fact = record
+        subcategories = self.fetch_subcategories()
+        for category_id, category in subcategories.items():
+            if month == 0:
+                f_day = datetime.date(year, 1, 1)
+                l_day = datetime.date(year, 12, 31)
+                budget, *_ = self.storage.select_budget_for_year(
+                    year, category_id)
+            else:
+                _, lastday = monthrange(year, month)
+                f_day = datetime.date(year, month, 1)
+                l_day = datetime.date(year, month, lastday)
+                budget, *_ = self.storage.select_budget(
+                    month, year, category_id)
+            fact, *_ = self.storage.select_summary(f_day, l_day, category_id)
+
             budget = from_cents(budget or 0)
             fact = from_cents(fact or 0)
-            category = self.fetch_subcategory(category_id)
 
             if budget == 0 and fact == 0:
                 continue
