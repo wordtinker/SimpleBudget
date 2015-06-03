@@ -1,7 +1,8 @@
 from PyQt5.Qt import QDialog, pyqtSignal, QDate, Qt
 from ui.manageRecord import Ui_Dialog
+from calendar import monthrange
 from models import CategoryListModel
-from enums import YEARS, MONTHS, BUDGET_TYPES
+from enums import YEARS, MONTHS, DAYS, BUDGET_TYPES
 from utils import to_cents
 
 
@@ -28,13 +29,13 @@ class Manager(Ui_Dialog, QDialog):
             self.budgetBox.setValue(self.record.amount)
             self.categoryBox.setCurrentText(self.record.category)
             self.typeBox.setCurrentText(self.record.type)
-            self.dayBox.setValue(self.record.day)
             self.yearBox.setCurrentText(str(self.record.year))
-            self.monthBox.setCurrentIndex(self.record.month)
+            self.monthBox.setCurrentIndex(self.record.month - 1)
+            self.dayBox.setCurrentText(str(self.record.day))
         else:
             today = QDate.currentDate()
             self.yearBox.setCurrentText(str(today.year()))
-            self.monthBox.setCurrentIndex(today.month())
+            self.monthBox.setCurrentIndex(today.month() - 1)
 
     def setup(self):
         """
@@ -48,28 +49,31 @@ class Manager(Ui_Dialog, QDialog):
 
         # Add years
         self.yearBox.addItems(YEARS)
-        self.monthBox.addItems(MONTHS)
+        self.monthBox.addItems(MONTHS[1:])
 
         # Set behaviour for days spinbox
         self.typeBox.currentTextChanged.connect(self.set_day_limit)
+        self.yearBox.currentTextChanged.connect(self.set_day_limit)
+        self.monthBox.currentTextChanged.connect(self.set_day_limit)
 
         self.typeBox.addItems(BUDGET_TYPES)
 
-    def set_day_limit(self, budget_type):
+    def set_day_limit(self, _):
         """
         Changes allowed day limit depending on choosen budget type.
         """
+        self.dayBox.clear()
+        budget_type = self.typeBox.currentText()
         if budget_type in ('Monthly', 'Daily'):
-            self.dayBox.setMinimum(0)
-            self.dayBox.setValue(0)
             self.dayBox.setEnabled(False)
         elif budget_type == 'Point':
-            self.dayBox.setMinimum(1)
-            self.dayBox.setMaximum(28)
+            year = int(self.yearBox.currentText())
+            month = self.monthBox.currentIndex() + 1
+            _, last_day = monthrange(year, month)
+            self.dayBox.addItems(str(i) for i in range(1, last_day+1))
             self.dayBox.setEnabled(True)
         else:  # Weekly
-            self.dayBox.setMinimum(1)
-            self.dayBox.setMaximum(7)
+            self.dayBox.addItems(DAYS)
             self.dayBox.setEnabled(True)
 
     def accept(self):
@@ -79,10 +83,9 @@ class Manager(Ui_Dialog, QDialog):
         amount = to_cents(self.budgetBox.value())
         category = self.categoryBox.currentData(role=Qt.UserRole)
         account_type = self.typeBox.currentText()
-        on_day = self.dayBox.value()
+        on_day = self.dayBox.currentIndex() + 1
         year = int(self.yearBox.currentText())
-        month = self.monthBox.currentIndex()
-
+        month = self.monthBox.currentIndex() + 1
         if self.record is None:
             self.createdRecord.emit(amount, category, account_type, on_day,
                                     year, month)

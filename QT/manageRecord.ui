@@ -125,7 +125,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="dayBox"/>
+          <widget class="QComboBox" name="dayBox"/>
          </item>
         </layout>
        </item>

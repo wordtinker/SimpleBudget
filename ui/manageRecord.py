@@ -76,7 +76,7 @@ class Ui_Dialog(object):
         self.label_12 = QtWidgets.QLabel(Dialog)
         self.label_12.setObjectName("label_12")
         self.horizontalLayout_14.addWidget(self.label_12)
-        self.dayBox = QtWidgets.QSpinBox(Dialog)
+        self.dayBox = QtWidgets.QComboBox(Dialog)
         self.dayBox.setObjectName("dayBox")
         self.horizontalLayout_14.addWidget(self.dayBox)
         self.verticalLayout_4.addLayout(self.horizontalLayout_14)

@@ -349,7 +349,7 @@ class ORM:
     def _monthly_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)
         _, lastday = monthrange(record.year, record.month)
-        last_day = datetime.date(record.year, record.month, lastday)
+        last_day = str(datetime.date(record.year, record.month, lastday))
         budget = record.amount
         fact = self.fetch_summary_for_month(record.month, record.year, category)
 
@@ -362,7 +362,7 @@ class ORM:
         else:  # budget and fact have different signs, error
             # Stick to the plan
             expectation = budget
-        yield Prediction(str(last_day), expectation, category)
+        yield Prediction(last_day, expectation, category)
 
     def _point_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)
@@ -385,4 +385,16 @@ class ORM:
                 yield Prediction(budget_date, budget, category)
 
     def _weekly_predictor(self, record, transaction_date):
-        pass  # TODO
+        from calendar import monthcalendar
+        category = self.fetch_subcategory(record.category_id)
+        day = record.day - 1  # Natural order to array index
+        # Calculate the dates of budget spendings
+        budget_days = [str(datetime.date(record.year, record.month, week[day]))
+                       for week in monthcalendar(record.year, record.month)
+                       if week[day] != 0]
+        budget = record.amount / len(budget_days)
+        for day in budget_days:
+            if transaction_date >= day:
+                yield None
+            else:
+                yield Prediction(day, budget, category)
