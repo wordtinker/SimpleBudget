@@ -25,7 +25,7 @@ class TreeItem:
         try:
             item = self.itemData[column]
             if isinstance(item, Decimal):
-                return str(item)
+                return "{0:.2f}".format(item)
             else:
                 return item
         except IndexError:
@@ -200,7 +200,7 @@ class TableModel(QAbstractTableModel):
 
         data = self.items[index.row()][index.column()]
         if isinstance(data, Decimal):
-            return QVariant(str(data))
+            return "{0:.2f}".format(data)
         else:
             return QVariant(data)
 

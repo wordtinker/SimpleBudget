@@ -108,7 +108,7 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         """
         record = self.orm.add_record(amount, category, budget_type, day,
                                          year, month)
-        self.records.addRow(record)
+        self.records.addRow(record)  # FIXME if date differs from curr month
 
     def record_edited(self, amount, category, budget_type, day, year,
                       month, record_id):

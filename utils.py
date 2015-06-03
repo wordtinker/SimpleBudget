@@ -195,7 +195,9 @@ class ORM:
         for mnth in month_range:
             budget_records = self.fetch_records(mnth, year)
             for record in budget_records:
-                yield self._predict(record, transaction_date)
+                for prediction in self._predict(record, transaction_date):
+                    if prediction:
+                        yield prediction  # TODO sorting by date
 
     # Categories #
 
@@ -262,7 +264,7 @@ class ORM:
 
     def fetch_transactions_for_month(self, month, year, category):
         if month == 0:
-            f_day = datetime.date(year, 1, 1)
+            f_day = datetime.date(year, 1, 1)  # FIXME maybe refactor
             l_day = datetime.date(year, 12, 31)
         else:
             _, lastday = monthrange(year, month)
@@ -337,9 +339,9 @@ class ORM:
     def _predict(self, record: Record, transaction_date):
         funcs = {
             'Monthly': self._monthly_predictor,
-            'Point': self._point_predictor
-            # 'Daily':   # TODO
-            # 'Weekly':  # TODO
+            'Point': self._point_predictor,
+            'Daily': self._daily_predictor,
+            'Weekly':  self._weekly_predictor
         }
 
         return funcs[record.type](record, transaction_date)
@@ -352,7 +354,7 @@ class ORM:
         fact = self.fetch_summary_for_month(record.month, record.year, category)
 
         if budget == 0:
-            return None
+            yield None
         elif budget > 0 and fact >= 0:  # Income
             expectation = max(budget - fact, 0)
         elif budget < 0 and fact <= 0:  # Spending
@@ -360,7 +362,27 @@ class ORM:
         else:  # budget and fact have different signs, error
             # Stick to the plan
             expectation = budget
-        return Prediction(str(last_day), expectation, category)
+        yield Prediction(str(last_day), expectation, category)
 
     def _point_predictor(self, record, transaction_date):
-        pass  # TODO depends on last_date
+        category = self.fetch_subcategory(record.category_id)
+        budget_date = str(datetime.date(record.year, record.month, record.day))
+        if transaction_date >= budget_date:
+            # Budget record has expired
+            yield None
+        else:
+            yield Prediction(budget_date, record.amount, category)
+
+    def _daily_predictor(self, record, transaction_date):
+        category = self.fetch_subcategory(record.category_id)
+        _, last_day = monthrange(record.year, record.month)
+        budget = record.amount / last_day
+        for i in range(1, last_day+1):
+            budget_date = str(datetime.date(record.year, record.month, i))
+            if transaction_date >= budget_date:
+                yield None
+            else:
+                yield Prediction(budget_date, budget, category)
+
+    def _weekly_predictor(self, record, transaction_date):
+        pass  # TODO
