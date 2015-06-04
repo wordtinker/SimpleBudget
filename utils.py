@@ -372,20 +372,21 @@ class ORM:
     def _monthly_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)
         _, lastday = monthrange(record.year, record.month)
-        last_day = str(datetime.date(record.year, record.month, lastday))
+        last_day = datetime.date(record.year, record.month, lastday)
         budget = record.amount
         fact = self.fetch_summary_for_month(record.month, record.year, category)
 
-        if budget == 0:
+        if budget == 0 or transaction_date >= last_day:
             yield None
-        elif budget > 0 and fact >= 0:  # Income
-            expectation = max(budget - fact, 0)
-        elif budget < 0 and fact <= 0:  # Spending
-            expectation = min(budget - fact, 0)
-        else:  # budget and fact have different signs, error
-            # Stick to the plan
-            expectation = budget
-        yield Prediction(last_day, expectation, category)
+        else:
+            if budget > 0 and fact >= 0:  # Income
+                expectation = max(budget - fact, 0)
+            elif budget < 0 and fact <= 0:  # Spending
+                expectation = min(budget - fact, 0)
+            else:  # budget and fact have different signs, error
+                # Stick to the plan
+                expectation = budget
+            yield Prediction(str(last_day), expectation, category)
 
     def _point_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)

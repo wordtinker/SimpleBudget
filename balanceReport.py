@@ -1,5 +1,6 @@
 from PyQt5.Qt import QDialog, QDate
 from ui.balanceReport import Ui_Dialog
+import datetime
 from models import TableModel
 from enums import YEARS, MONTHS
 
@@ -44,7 +45,7 @@ class BalanceReport(Ui_Dialog, QDialog):
         year = int(self.yearBox.currentText())
         month = int(self.monthBox.currentIndex())  # by position
 
-        # Get starting balance, active period -1 day
+        # Get starting balance
         last_date, balance = self.orm.fetch_balance_to_date(month, year)
         self.roll.addRow((last_date, 0, balance, 'Transaction', "- - -"))
 
@@ -54,6 +55,10 @@ class BalanceReport(Ui_Dialog, QDialog):
             last_date = max(last_date, transaction.date)
             self.roll.addRow((transaction.date, transaction.amount, balance,
                               'Transaction', transaction.category))
+
+        # Correct the last activity date
+        today = str(datetime.date.today())
+        last_date = max(last_date, today)
 
         # Get budget spendings/incoms after active period
         predictions = list(
