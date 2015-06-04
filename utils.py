@@ -2,7 +2,8 @@
 from collections import namedtuple
 import decimal
 import datetime
-from calendar import monthrange
+from dateutil.relativedelta import relativedelta
+from calendar import monthrange, monthcalendar
 from PyQt5.Qt import QMessageBox
 from storage import Storage
 
@@ -187,17 +188,33 @@ class ORM:
             yield BudgetBar(category, fact, budget, str(expectation))
 
     def fetch_budget_prediction(self, month, year, transaction_date):
-        if month == 0:
-            month_range = range(1, 13)
-        else:
-            month_range = range(month, month + 1)
+        transaction_date = (int(i) for i in transaction_date.split('-'))  # FIXME refactor date
+        transaction_date = datetime.date(*transaction_date)
 
-        for mnth in month_range:
-            budget_records = self.fetch_records(mnth, year)
-            for record in budget_records:
-                for prediction in self._predict(record, transaction_date):
-                    if prediction:
-                        yield prediction  # TODO sorting by date
+        if month == 0:
+            min_period = datetime.date(year, 1, 1)
+            max_period = datetime.date(year, 12, 31)
+        else:
+            min_period = datetime.date(year, month, 1)
+            max_period = datetime.date(year, month, 28)  # Day is not important
+
+        min_period = min(transaction_date, min_period)
+
+        m = min_period.month
+        for y in range(min_period.year, max_period.year+1):
+            while True:
+                budget_records = self.fetch_records(m, y)
+                for record in budget_records:
+                    for prediction in self._predict(record, transaction_date):
+                        if prediction:
+                            yield prediction
+
+                if (m, y) == (max_period.month, max_period.year) or m == 12:
+                    m = 1
+                    break
+                else:
+                    # Move to the next month
+                    m += 1
 
     # Categories #
 
@@ -310,12 +327,18 @@ class ORM:
         return transactions
 
     def fetch_balance_to_date(self, month, year):
+        # Get the last transaction date
+        last_transaction, *_ = self.storage.select_last_date()
+        last_transaction = (int(i) for i in last_transaction.split('-'))
+        last_transaction = datetime.date(*last_transaction)
+        last_transaction += relativedelta(days=1)
+        # Get the first day of report period
         if month in (0, 1):
-            last_day = datetime.date(year-1, 12, 31)
+            last_day = datetime.date(year, 1, 1)
         else:
-            month -= 1
-            _, lastday = monthrange(year, month)
-            last_day = datetime.date(year, month, lastday)
+            last_day = datetime.date(year, month, 1)
+
+        last_day = min(last_day, last_transaction)
 
         balance, *_ = self.storage.select_balance_till(last_day)
         return str(last_day), from_cents(balance or 0)
@@ -366,30 +389,29 @@ class ORM:
 
     def _point_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)
-        budget_date = str(datetime.date(record.year, record.month, record.day))
+        budget_date = datetime.date(record.year, record.month, record.day)
         if transaction_date >= budget_date:
             # Budget record has expired
             yield None
         else:
-            yield Prediction(budget_date, record.amount, category)
+            yield Prediction(str(budget_date), record.amount, category)
 
     def _daily_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)
         _, last_day = monthrange(record.year, record.month)
         budget = record.amount / last_day
         for i in range(1, last_day+1):
-            budget_date = str(datetime.date(record.year, record.month, i))
+            budget_date = datetime.date(record.year, record.month, i)
             if transaction_date >= budget_date:
                 yield None
             else:
-                yield Prediction(budget_date, budget, category)
+                yield Prediction(str(budget_date), budget, category)
 
     def _weekly_predictor(self, record, transaction_date):
-        from calendar import monthcalendar
         category = self.fetch_subcategory(record.category_id)
         day = record.day - 1  # Natural order to array index
         # Calculate the dates of budget spendings
-        budget_days = [str(datetime.date(record.year, record.month, week[day]))
+        budget_days = [datetime.date(record.year, record.month, week[day])
                        for week in monthcalendar(record.year, record.month)
                        if week[day] != 0]
         budget = record.amount / len(budget_days)
@@ -397,4 +419,4 @@ class ORM:
             if transaction_date >= day:
                 yield None
             else:
-                yield Prediction(day, budget, category)
+                yield Prediction(str(day), budget, category)

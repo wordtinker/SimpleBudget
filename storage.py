@@ -157,7 +157,7 @@ class Storage:
         SELECT sum(t.amount) FROM Transactions as t
         INNER JOIN Accounts as a
         on t.acc_id = a.rowid
-        WHERE date <= ?
+        WHERE date < ?
         AND exbudget = 0""", (to_date, ))
         return db_cursor.fetchone()
 
@@ -195,6 +195,13 @@ class Storage:
         WHERE date BETWEEN ? AND ?
         AND exbudget = 0""", (from_date, till_date))
         return db_cursor.fetchall()
+
+    def select_last_date(self):
+        db_cursor = self.db_conn.cursor()
+        db_cursor.execute("""
+        SELECT MAX(date) FROM Transactions
+        """, ())
+        return db_cursor.fetchone()
 
     def exists_transaction(self, acc_id):
         db_cursor = self.db_conn.cursor()

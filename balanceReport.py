@@ -44,7 +44,7 @@ class BalanceReport(Ui_Dialog, QDialog):
         year = int(self.yearBox.currentText())
         month = int(self.monthBox.currentIndex())  # by position
 
-        # Get starting balance active, period -1 day  # TODO including prediction before that
+        # Get starting balance, active period -1 day
         last_date, balance = self.orm.fetch_balance_to_date(month, year)
         self.roll.addRow((last_date, 0, balance, 'Transaction', "- - -"))
 
@@ -56,8 +56,10 @@ class BalanceReport(Ui_Dialog, QDialog):
                               'Transaction', transaction.category))
 
         # Get budget spendings/incoms after active period
-        for prediction in\
-                self.orm.fetch_budget_prediction(month, year, last_date):
+        predictions = list(
+            self.orm.fetch_budget_prediction(month, year, last_date))
+        predictions = sorted(predictions, key=lambda p: p.date)
+        for prediction in predictions:
             category = prediction.category
             balance += prediction.amount
             self.roll.addRow((prediction.date, prediction.amount, balance,
