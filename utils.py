@@ -34,6 +34,22 @@ def to_cents(full: float):
     return int(decimal.Decimal(str(full)) * decimal.Decimal('100'))
 
 
+def _from_date_to_period(month, year):
+    """
+    Converts month and year into starting and ending date of period.
+    Month 0 is considered full year.
+    """
+    if month == 0:
+        f_day = datetime.date(year, 1, 1)
+        l_day = datetime.date(year, 12, 31)
+    else:
+        _, lastday = monthrange(year, month)
+        f_day = datetime.date(year, month, 1)
+        l_day = datetime.date(year, month, lastday)
+
+    return f_day, l_day
+
+
 class ModelCore:
     """
     The core of QT model. Must implement [i] and len() interface.
@@ -188,15 +204,14 @@ class ORM:
             yield BudgetBar(category, fact, budget, str(expectation))
 
     def fetch_budget_prediction(self, month, year, transaction_date):
+        """
+        Fetches predictions for a given period.
+
+        """
         transaction_date = (int(i) for i in transaction_date.split('-'))  # FIXME refactor date
         transaction_date = datetime.date(*transaction_date)
 
-        if month == 0:
-            min_period = datetime.date(year, 1, 1)
-            max_period = datetime.date(year, 12, 31)
-        else:
-            min_period = datetime.date(year, month, 1)
-            max_period = datetime.date(year, month, 28)  # Day is not important
+        min_period, max_period = _from_date_to_period(month, year)
 
         min_period = min(transaction_date, min_period)
 
@@ -280,13 +295,7 @@ class ORM:
                            rowid, category_id)
 
     def fetch_transactions_for_month(self, month, year, category):
-        if month == 0:
-            f_day = datetime.date(year, 1, 1)  # FIXME maybe refactor
-            l_day = datetime.date(year, 12, 31)
-        else:
-            _, lastday = monthrange(year, month)
-            f_day = datetime.date(year, month, 1)
-            l_day = datetime.date(year, month, lastday)
+        f_day, l_day = _from_date_to_period(month, year)
 
         results = self.storage.select_budget_transactions_for_category(
             f_day, l_day, category.id)
@@ -295,29 +304,17 @@ class ORM:
         return transactions
 
     def fetch_summary_for_month(self, month, year, category: Category):
-        if month == 0:
-            f_day = datetime.date(year, 1, 1)
-            l_day = datetime.date(year, 12, 31)
-        else:
-            _, lastday = monthrange(year, month)
-            f_day = datetime.date(year, month, 1)
-            l_day = datetime.date(year, month, lastday)
+        f_day, l_day = _from_date_to_period(month, year)
 
         total, *_ = self.storage.select_summary(f_day, l_day, category.id)
         return from_cents(total or 0)
 
     def fetch_transactions_for_period(self, month, year):
-        if month == 0:
-            first_day = datetime.date(year, 1, 1)
-            last_day = datetime.date(year, 12, 31)
-        else:
-            _, lastday = monthrange(year, month)
-            first_day = datetime.date(year, month, 1)
-            last_day = datetime.date(year, month, lastday)
+        f_day, l_day = _from_date_to_period(month, year)
 
         transactions = [self._build_transaction(t)
                         for t in self.storage.select_transactions_for_period(
-                        first_day, last_day)]
+                        f_day, l_day)]
         return transactions
 
     def fetch_transactions(self, account):
@@ -411,7 +408,7 @@ class ORM:
     def _weekly_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)
         day = record.day - 1  # Natural order to array index
-        # Calculate the dates of budget spendings
+        # Calculate the dates of budget spending
         budget_days = [datetime.date(record.year, record.month, week[day])
                        for week in monthcalendar(record.year, record.month)
                        if week[day] != 0]
