@@ -29,8 +29,7 @@ class Manager(Ui_manageTransaction, QDialog):
         self.categorysBox.setModel(self.categories_model)
 
         if self.transaction:
-            y, m, d = self.transaction.date.split('-')
-            self.dateEdit.setDate(QDate(int(y), int(m), int(d)))
+            self.dateEdit.setDate(self.transaction.date)
             self.amountBox.setValue(self.transaction.amount)
             self.infoEdit.setText(self.transaction.info)
             self.categorysBox.setCurrentText(self.transaction.category)

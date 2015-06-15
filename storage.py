@@ -150,7 +150,7 @@ class Storage:
     def select_balance_till(self, to_date):
         """
         Returns the balance of all accounts combined, excluding non-budget
-        accounts, up to and including given date.
+        accounts, up to given date.
         """
         db_cursor = self.db_conn.cursor()
         db_cursor.execute("""

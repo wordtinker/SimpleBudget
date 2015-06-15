@@ -50,6 +50,10 @@ def _from_date_to_period(month, year):
     return f_day, l_day
 
 
+def _from_str_to_date(date):
+    year, month, day = (int(i) for i in date.split('-'))
+    return datetime.date(year, month, day)
+
 class ModelCore:
     """
     The core of QT model. Must implement [i] and len() interface.
@@ -208,9 +212,6 @@ class ORM:
         Fetches predictions for a given period.
 
         """
-        transaction_date = (int(i) for i in transaction_date.split('-'))  # FIXME refactor date
-        transaction_date = datetime.date(*transaction_date)
-
         min_period, max_period = _from_date_to_period(month, year)
 
         min_period = min(transaction_date, min_period)
@@ -291,6 +292,7 @@ class ORM:
         category = self.fetch_subcategory(category_id)
         category_name = category.parent + '::' + category.name
         amount = from_cents(amount)
+        date = _from_str_to_date(date)
         return Transaction(date, amount, info, category_name,
                            rowid, category_id)
 
@@ -326,8 +328,7 @@ class ORM:
     def fetch_balance_to_date(self, month, year):
         # Get the last transaction date
         last_transaction, *_ = self.storage.select_last_date()
-        last_transaction = (int(i) for i in last_transaction.split('-'))
-        last_transaction = datetime.date(*last_transaction)
+        last_transaction = _from_str_to_date(last_transaction)
         last_transaction += relativedelta(days=1)
         # Get the first day of report period
         if month in (0, 1):
@@ -338,7 +339,7 @@ class ORM:
         last_day = min(last_day, last_transaction)
 
         balance, *_ = self.storage.select_balance_till(last_day)
-        return str(last_day), from_cents(balance or 0)
+        return last_day, from_cents(balance or 0)
 
     def delete_transaction(self, transaction, account):
         self.storage.delete_transaction(transaction.id, account.id)
@@ -383,7 +384,7 @@ class ORM:
             else:  # budget and fact have different signs, error
                 # Stick to the plan
                 expectation = budget
-            yield Prediction(str(last_day), expectation, category)
+            yield Prediction(last_day, expectation, category)
 
     def _point_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)
@@ -392,7 +393,7 @@ class ORM:
             # Budget record has expired
             yield None
         else:
-            yield Prediction(str(budget_date), record.amount, category)
+            yield Prediction(budget_date, record.amount, category)
 
     def _daily_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)
@@ -403,11 +404,11 @@ class ORM:
             if transaction_date >= budget_date:
                 yield None
             else:
-                yield Prediction(str(budget_date), budget, category)
+                yield Prediction(budget_date, budget, category)
 
     def _weekly_predictor(self, record, transaction_date):
         category = self.fetch_subcategory(record.category_id)
-        day = record.day - 1  # Natural order to array index
+        day = record.day - 1  # Natural day of week order to array index
         # Calculate the dates of budget spending
         budget_days = [datetime.date(record.year, record.month, week[day])
                        for week in monthcalendar(record.year, record.month)
@@ -417,4 +418,4 @@ class ORM:
             if transaction_date >= day:
                 yield None
             else:
-                yield Prediction(str(day), budget, category)
+                yield Prediction(day, budget, category)

@@ -57,7 +57,7 @@ class BalanceReport(Ui_Dialog, QDialog):
                               'Transaction', transaction.category))
 
         # Correct the last activity date
-        today = str(datetime.date.today())
+        today = datetime.date.today()
         last_date = max(last_date, today)
 
         # Get budget spendings/incoms after active period

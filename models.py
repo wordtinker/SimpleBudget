@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt,\
     QAbstractListModel, QVariant, QAbstractTableModel
 from decimal import Decimal
+from datetime import date
 
 
 class TreeItem:
@@ -26,6 +27,8 @@ class TreeItem:
             item = self.itemData[column]
             if isinstance(item, Decimal):
                 return "{0:.2f}".format(item)
+            elif isinstance(item, date):
+                return str(item)
             else:
                 return item
         except IndexError:
@@ -201,6 +204,8 @@ class TableModel(QAbstractTableModel):
         data = self.items[index.row()][index.column()]
         if isinstance(data, Decimal):
             return "{0:.2f}".format(data)
+        elif isinstance(data, date):
+                return str(data)
         else:
             return QVariant(data)
 
