@@ -107,8 +107,10 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         Adds created budget record into DB and GUI.
         """
         record = self.orm.add_record(amount, category, budget_type, day,
-                                         year, month)
-        self.records.addRow(record)  # FIXME if date differs from curr month
+                                     year, month)
+        if (self.monthBox.currentIndex() in (month, 0) and
+                int(self.yearBox.currentText()) == year):
+            self.records.addRow(record)
 
     def record_edited(self, amount, category, budget_type, day, year,
                       month, record_id):
