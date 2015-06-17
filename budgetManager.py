@@ -3,9 +3,10 @@ from PyQt5.Qt import QDate, QItemSelectionModel, Qt
 
 import ui.manageBudget
 from recordManager import Manager
+from monthSelector import Selector
 from models import TableModel
 from enums import YEARS, MONTHS
-from utils import show_warning
+from utils import show_warning, to_cents
 
 
 class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
@@ -99,7 +100,19 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
             self.records.removeRows(index.row(), 1)
 
     def copy_records(self):
-        pass  # TODO __FUTURE__
+        dialog = Selector()
+        dialog.monthSelected.connect(self.copy_from_month)
+        dialog.exec()
+
+    def copy_from_month(self, month, year):
+        records = self.orm.fetch_records(month, year)
+        new_month = self.monthBox.currentIndex()
+        new_year = int(self.yearBox.currentText())
+        for rec in records:
+            category = self.orm.fetch_subcategory(rec.category_id)
+            amount = to_cents(rec.amount)
+            self.record_created(amount, category, rec.type, rec.day,
+                                new_year, new_month)
 
     def record_created(self, amount, category, budget_type, day, year,
                        month):
