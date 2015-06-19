@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog,\
+    QMessageBox, QHeaderView
 from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtWidgets import QLabel
 from ui.QBar import QBar
@@ -96,7 +97,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.setupUi(self)
 
         # Set up some visual tweaks
-        self.setObjectName(config.APPNAME)
+        self.accountsTree.header().setSectionResizeMode(
+            QHeaderView.ResizeToContents)
 
         # Connect signals and slots
         self.actionOpenFile.triggered.connect(self.choose_file)
@@ -212,6 +214,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
         # update recent filename
         update_recent(name)
+        # update window title
+        self.setWindowTitle(' -- '.join((config.APPNAME, name)))
 
     def close_file(self):
         """
@@ -226,6 +230,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.orm = None
         # Forget recent filename
         update_recent()
+        # update window title
+        self.setWindowTitle(config.APPNAME)
 
     def exit_action_triggered(self):
         """
