@@ -328,7 +328,7 @@ class ORM:
     def fetch_balance_to_date(self, month, year):
         # Get the last transaction date
         last_transaction, *_ = self.storage.select_last_date()
-        last_transaction = _from_str_to_date(last_transaction)
+        last_transaction = _from_str_to_date(last_transaction)  # FIXME None
         last_transaction += relativedelta(days=1)
         # Get the first day of report period
         if month in (0, 1):

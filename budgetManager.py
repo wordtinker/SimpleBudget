@@ -1,13 +1,13 @@
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QHeaderView
 from PyQt5.Qt import QDate, QItemSelectionModel, Qt
 
+from calendar import monthrange
 import ui.manageBudget
 from recordManager import Manager
 from monthSelector import Selector
 from models import TableModel
 from enums import YEARS, MONTHS
 from utils import show_warning, to_cents
-
 
 class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
     """
@@ -21,6 +21,9 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
 
         # Fetch subcategories list
         self.categories = self.orm.fetch_subcategories(full=False)
+
+        self.recordsView.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Stretch)
 
         self.set_month_and_year()
         self.setup_table()
@@ -41,7 +44,7 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         Sets initial values for year and month boxes.
         """
         self.yearBox.addItems(YEARS)
-        self.monthBox.addItems(MONTHS)
+        self.monthBox.addItems(MONTHS[1:])
         current_date = QDate.currentDate()
         self.yearBox.setCurrentText(str(current_date.year()))
         self.monthBox.setCurrentText(MONTHS[current_date.month()])
@@ -60,7 +63,7 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         Loads the data from DB to GUI.
         """
         self.records.prepare()
-        month = self.monthBox.currentIndex()  # by position
+        month = self.monthBox.currentIndex() + 1  # by position+1
         year = self.yearBox.currentText()
         records = self.orm.fetch_records(month, year)
         for r in records:
@@ -106,12 +109,14 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
 
     def copy_from_month(self, month, year):
         records = self.orm.fetch_records(month, year)
-        new_month = self.monthBox.currentIndex()
+        new_month = self.monthBox.currentIndex() + 1
         new_year = int(self.yearBox.currentText())
+        _, last_day = monthrange(new_year, new_month)
         for rec in records:
             category = self.orm.fetch_subcategory(rec.category_id)
             amount = to_cents(rec.amount)
-            self.record_created(amount, category, rec.type, rec.day,
+            new_day = min(last_day, rec.day)
+            self.record_created(amount, category, rec.type, new_day,
                                 new_year, new_month)
 
     def record_created(self, amount, category, budget_type, day, year,
@@ -121,7 +126,7 @@ class BudgetManager(ui.manageBudget.Ui_Dialog, QDialog):
         """
         record = self.orm.add_record(amount, category, budget_type, day,
                                      year, month)
-        if (self.monthBox.currentIndex() in (month, 0) and
+        if (self.monthBox.currentIndex() + 1 == month and
                 int(self.yearBox.currentText()) == year):
             self.records.addRow(record)
 

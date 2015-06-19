@@ -347,7 +347,7 @@ class Storage:
         self.db_conn.commit()
         return True
 
-# #################### Budgets ########################
+    # #################### Budgets ########################
 
     def select_records(self, month, year):
         db_cursor = self.db_conn.cursor()

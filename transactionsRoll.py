@@ -1,4 +1,4 @@
-from PyQt5.Qt import QDialog, QItemSelectionModel
+from PyQt5.Qt import QDialog, QItemSelectionModel, QHeaderView
 from PyQt5.QtCore import Qt
 
 from ui.transactionsRoll import Ui_Dialog
@@ -21,6 +21,9 @@ class TransactionsRoll(Ui_Dialog, QDialog):
         self.rollView.setModel(self.roll)
         self.selection = QItemSelectionModel(self.roll)
         self.rollView.setSelectionModel(self.selection)
+
+        self.rollView.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Stretch)
 
         self.addTransaction.clicked.connect(self.add_transaction)
         self.editTransaction.clicked.connect(self.edit_transaction)
